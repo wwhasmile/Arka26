@@ -1,7 +1,6 @@
 EXECUTABLE ?= arka26
 SRC_DIR ?= src
 BUILD_DIR ?= build
-BIN_DIR ?= bin
 
 PLATFORM ?= desktop
 UNAME := $(shell uname)
@@ -39,12 +38,14 @@ build: $(EXECUTABLE)
 .PHONY: build
 build: $(EXECUTABLE)
 
-.PHONY: $(EXECUTABLE)
-$(EXECUTABLE): $(BIN_DIR)/$(EXECUTABLE)
+.PHONY: rebuild
+rebuild: clean build
 
-$(BIN_DIR)/$(EXECUTABLE): $(OBJS)
-	@mkdir -p $(BIN_DIR)
-	$(CC) -o $(BIN_DIR)/$(EXECUTABLE) $^ $(LDFLAGS)
+.PHONY: $(EXECUTABLE)
+$(EXECUTABLE): $(BUILD_DIR)/$(EXECUTABLE)
+
+$(BUILD_DIR)/$(EXECUTABLE): $(OBJS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
@@ -53,5 +54,4 @@ $(BUILD_DIR)/%.o: %.c
 .PHONY: clean
 clean:
 	@echo "Cleaning all objects and artifacts"
-	@rm -f $(OBJS)
-	@rm -f $(BIN_DIR)/$(EXECUTABLE)
+	rm -rf $(BUILD_DIR)/*
