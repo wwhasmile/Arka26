@@ -1,4 +1,4 @@
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 
 #include <core/defines.h>
 
@@ -9,4 +9,4 @@ int main(int argc, char** argv)
     return 0;
 }
 
-#endif // EMSCRIPTEN
+#endif // __EMSCRIPTEN__
