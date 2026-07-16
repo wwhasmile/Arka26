@@ -13,6 +13,8 @@
     in {
       devShells.${system}.default = pkgs.mkShellNoCC {
         packages = with pkgs; [
+          python3
+          compiledb
           clang-tools
           gnumake
           gcc
