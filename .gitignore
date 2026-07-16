@@ -1,6 +1,7 @@
 .vscode/
 .vs/
 .idea/
+.cache/
 
 .direnv/
 
