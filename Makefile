@@ -9,7 +9,7 @@ MODE ?= debug
 
 CC ?= cc
 CFLAGS := -Wall -Wextra -Wpedantic -std=c99 -I$(SRC_DIR)
-LDFLAGS := 
+LDFLAGS :=
 
 ifeq ($(PLATFORM), web)
 	CC := emcc
@@ -29,11 +29,11 @@ else
 	CFLAGS += -g0 -O3
 endif
 
-SRCS = $(wildcard $(SRC_DIR)/**/*.c)
+SRCS = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/**/*.c)
 OBJS = $(addprefix $(BUILD_DIR)/,$(SRCS:.c=.o))
 
 .PHONY: all
-build: $(EXECUTABLE)
+all: $(EXECUTABLE)
 
 .PHONY: build
 build: $(EXECUTABLE)
