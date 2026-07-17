@@ -22,7 +22,6 @@
           emscripten
           glibc
           libX11
-          libXcursor
           libXrandr
           libXext
           libXi
