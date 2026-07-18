@@ -4,11 +4,11 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
   outputs = { self, ... }@inputs:
-    let 
+    let
       system = "x86_64-linux";
 
       pkgs = import inputs.nixpkgs {
-        inherit system; 
+        inherit system;
       };
     in {
       devShells.${system}.default = pkgs.mkShellNoCC {
@@ -22,6 +22,7 @@
           emscripten
           glibc
           libX11
+          libXcursor
           libXrandr
           libXext
           libXi

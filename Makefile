@@ -17,7 +17,7 @@ ifeq ($(PLATFORM), web)
 	CFLAGS += -pthread
 	LDFLAGS += -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -pthread
 else ifeq ($(UNAME), Linux)
-	LDFLAGS += -lX11 -lGL -lGLX -lm -lXrandr
+	LDFLAGS += -lX11 -lXcursor -lGL -lGLX -lm -lXrandr
 else ifeq ($(OS), Windows_NT)
 	EXECUTABLE += .exe
 	LDFLAGS += -lopengl32 -lgdi32
