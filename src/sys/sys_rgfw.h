@@ -10,10 +10,12 @@
 typedef struct
 {
     bool running;
-    char* title;
-    char* appName;
+    const char* title;
+    const char* appName;
     i32 width;
     i32 height;
+    i32 lastX;
+    i32 lastY;
     sysFlags flags;
     RGFW_window* window;
 } sysState_RGFW;

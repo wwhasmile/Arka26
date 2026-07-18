@@ -49,6 +49,8 @@ bool Sys_Initialize(const char* title, const char* appName, i32 width, i32 heigh
 
 bool Sys_TryPollEvent(sysEvent* event);
 
+void Sys_SetFullscreen(bool enable);
+
 void Sys_Quit(void);
 
 #endif // __SYS_H__

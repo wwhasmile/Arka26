@@ -12,13 +12,20 @@ bool Sys_Initialize(const char *title, const char *appName, i32 width, i32 heigh
 
     RGFW_windowFlags rgfwFlags = RGFW_windowCenter;
     rgfwFlags = RGFW_windowCenter;
-    if (flags & SYS_FLAGS_FULLSCREEN)
-        rgfwFlags |= RGFW_windowFullscreen;
+
     if (!(flags & SYS_FLAGS_RESIZABLE))
         rgfwFlags |= RGFW_windowNoResize;
-    s_sysState.flags = flags;
+
     s_sysState.window = RGFW_createWindow(title, 0, 0, width, height, rgfwFlags);
     RGFW_window_showMouse(s_sysState.window, FALSE);
+    if (flags & SYS_FLAGS_FULLSCREEN)
+        Sys_SetFullscreen(TRUE);
+    s_sysState.flags = flags;
+    s_sysState.width = width;
+    s_sysState.height = height;
+    s_sysState.title = title;
+    s_sysState.appName = appName;
+
     return TRUE;
 }
 
@@ -33,11 +40,7 @@ bool Sys_TryPollEvent(sysEvent* event)
     if (ev.type == RGFW_keyPressed && ev.key.value == RGFW_keyEnter && (ev.key.mod & RGFW_modAlt))
     {
         bool isFullscreen = s_sysState.flags & SYS_FLAGS_FULLSCREEN;
-        RGFW_window_setFullscreen(s_sysState.window, !isFullscreen);
-        if (isFullscreen)
-            s_sysState.flags &= ~SYS_FLAGS_FULLSCREEN;
-        else
-            s_sysState.flags |= SYS_FLAGS_FULLSCREEN;
+        Sys_SetFullscreen(!isFullscreen);
 
         goto success;
     }
@@ -79,6 +82,29 @@ bool Sys_TryPollEvent(sysEvent* event)
 success:
     *event = resultEvent;
     return TRUE;
+}
+
+void Sys_SetFullscreen(bool enable)
+{
+    if (enable && !(s_sysState.flags & SYS_FLAGS_FULLSCREEN))
+    {
+        if (!RGFW_window_getPosition(s_sysState.window, &s_sysState.lastX, &s_sysState.lastY))
+            return;
+
+        s_sysState.flags |= SYS_FLAGS_FULLSCREEN;
+
+        RGFW_monitor* monitor = RGFW_window_getMonitor(s_sysState.window);
+        RGFW_window_setBorder(s_sysState.window, FALSE);
+        RGFW_window_resize(s_sysState.window, monitor->mode.w, monitor->mode.h);
+        RGFW_window_move(s_sysState.window, 0, 0);
+    }
+    else if (!enable && (s_sysState.flags & SYS_FLAGS_FULLSCREEN))
+    {
+        s_sysState.flags &= ~SYS_FLAGS_FULLSCREEN;
+        RGFW_window_setBorder(s_sysState.window, TRUE);
+        RGFW_window_resize(s_sysState.window, s_sysState.width, s_sysState.height);
+        RGFW_window_move(s_sysState.window, s_sysState.lastX, s_sysState.lastY);
+    }
 }
 
 void Sys_Quit(void)
