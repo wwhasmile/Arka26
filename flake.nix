@@ -28,6 +28,7 @@
           libXi
           libGL
           libGLU
+          nixd
         ];
       };
     };
