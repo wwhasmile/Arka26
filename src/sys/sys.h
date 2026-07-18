@@ -50,6 +50,7 @@ bool Sys_Initialize(const char* title, const char* appName, i32 width, i32 heigh
 bool Sys_TryPollEvent(sysEvent* event);
 
 void Sys_SetFullscreen(bool enable);
+bool Sys_IsFullscreen(void);
 
 void Sys_Quit(void);
 

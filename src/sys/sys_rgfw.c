@@ -1,3 +1,4 @@
+#include "sys/sys.h"
 #define RGFW_IMPLEMENTATION
 #include "sys_rgfw.h"
 
@@ -105,6 +106,11 @@ void Sys_SetFullscreen(bool enable)
         RGFW_window_resize(s_sysState.window, s_sysState.width, s_sysState.height);
         RGFW_window_move(s_sysState.window, s_sysState.lastX, s_sysState.lastY);
     }
+}
+
+bool Sys_IsFullscreen(void)
+{
+    return s_sysState.flags & SYS_FLAGS_FULLSCREEN;
 }
 
 void Sys_Quit(void)
