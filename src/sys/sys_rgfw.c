@@ -1,6 +1,8 @@
 #define RGFW_IMPLEMENTATION
 #include "sys_rgfw.h"
 
+#include <stdlib.h>
+
 static sysState_RGFW s_sysState;
 
 bool Sys_Initialize(const char *title, const char *appName, i32 width, i32 height, sysFlags flags)
@@ -77,6 +79,11 @@ bool Sys_TryPollEvent(sysEvent* event)
 success:
     *event = resultEvent;
     return TRUE;
+}
+
+void Sys_Quit(void)
+{
+    exit(0);
 }
 
 sysState_RGFW* Sys_GetStateRGFW(void)
