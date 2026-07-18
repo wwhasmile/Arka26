@@ -11,6 +11,10 @@ typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long long u64;
 
+#ifdef __EMSCRIPTEN__
+#include <stdbool.h>
+#undef bool
+#endif
 typedef u8 bool;
 #define TRUE 1U
 #define FALSE 0U

@@ -8,18 +8,20 @@ UNAME := $(shell uname)
 MODE ?= debug
 
 CC ?= cc
-CFLAGS := -Wall -Wextra -Wpedantic -std=c99 -I$(SRC_DIR)
+CFLAGS := -Wall -Wextra -Wpedantic -I$(SRC_DIR)
 LDFLAGS :=
 
 ifeq ($(PLATFORM), web)
 	CC := emcc
 	EXECUTABLE := index.html
-	CFLAGS += -pthread
+	CFLAGS += -pthread -std=gnu99
 	LDFLAGS += -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -pthread
 else ifeq ($(UNAME), Linux)
+	CFLAGS += -std=c99
 	LDFLAGS += -lX11 -lXcursor -lGL -lGLX -lm -lXrandr
 else ifeq ($(OS), Windows_NT)
 	EXECUTABLE += .exe
+	CFLAGS += -std=c99
 	LDFLAGS += -lopengl32 -lgdi32
 endif
 
