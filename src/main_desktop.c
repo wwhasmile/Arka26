@@ -1,3 +1,5 @@
+#ifndef __EMSCRIPTEN__
+
 #include <sys/sys.h>
 
 int main(int argc, char** argv)
@@ -18,3 +20,5 @@ int main(int argc, char** argv)
         }
     }
 }
+
+#endif // __EMSCRIPTEN__
