@@ -3,10 +3,8 @@
 
 #include "sys.h"
 
-#define RGFW_IMPLEMENTATION
 #define RGFW_INT_DEFINED
 #define RGFW_OPENGL
-#define RGFW_NO_X11_CURSOR
 #include <ext/RGFW.h>
 
 typedef struct
@@ -16,8 +14,7 @@ typedef struct
     char* appName;
     i32 width;
     i32 height;
-    sysFlags sysFlags;
-    RGFW_windowFlags rgfwFlags;
+    sysFlags flags;
     RGFW_window* window;
 } sysState_RGFW;
 
