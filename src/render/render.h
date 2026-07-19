@@ -54,6 +54,14 @@ typedef enum
     RENDER_TEXTURE_WRAP_MIRROR
 } renderTextureWrap_t;
 
+typedef struct
+{
+    u8 filter;
+    u8 horizontalWrap;
+    u8 verticalWrap;
+    u8 _padding0;
+} renderTextureSampler_t;
+
 typedef enum
 {
     RENDER_TESTS_BLEND = 1 << 0,
