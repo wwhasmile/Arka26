@@ -24,4 +24,14 @@ typedef u8 bool;
 
 #define NULL ((void*)0)
 
+#if defined(__GNUC__) || defined(__clang__)
+#define FORCE_INLINE inline __attribute__((always_inline))
+#endif // defined(__GNUC__) || defined(__clang__)
+
+#ifdef _NDEBUG
+#define INLINE FORCE_INLINE
+#else
+#define INLINE
+#endif // _NDEBUG
+
 #endif // __DEFINES_H__
