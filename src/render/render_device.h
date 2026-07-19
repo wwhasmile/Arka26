@@ -2,10 +2,16 @@
 #define __RENDER_DEVICE_H__
 
 #include <core/defines.h>
+#include <core/color.h>
+
+typedef void* Mesh;
+typedef void* Texture;
+typedef void* Surface;
+typedef void* Shader;
 
 typedef void (*renderDevicePrepareProc)(void);
 typedef bool (*renderDeviceInitializeProc)(void);
-typedef void (*renderDeviceClearProc)(u32 color);
+typedef void (*renderDeviceClearProc)(color32 color);
 typedef void (*renderDeviceSwapProc)(void);
 
 typedef struct

@@ -1,3 +1,4 @@
+#include "core/color.h"
 #include "render_device.h"
 
 #include <sys/sys_rgfw.h>
@@ -11,11 +12,18 @@
 static struct
 {
     RGFW_glContext* context;
+    GLuint vao;
+
+    GLuint vbo;
+    GLuint ebo;
+    GLuint fbo;
+    GLuint texture;
+    GLuint shader;
 } s_renderStateGL;
 
 static void RenderDeviceGL_Prepare(void);
 static bool RenderDeviceGL_Initialize(void);
-static void RenderDeviceGL_Clear(u32 color);
+static void RenderDeviceGL_Clear(color32 color);
 static void RenderDeviceGL_Swap(void);
 
 void RenderDevice_CreateGL(renderDevice *device)
@@ -42,16 +50,18 @@ bool RenderDeviceGL_Initialize(void)
     if (!gladLoadGLLoader((GLADloadproc)RGFW_getProcAddress_OpenGL))
         return FALSE;
     #endif // __EMSCRIPTEN__
+
+    glGenVertexArrays(1, &s_renderStateGL.vao);
+    if (s_renderStateGL.vao == 0)
+        return FALSE;
+    glBindVertexArray(s_renderStateGL.vao);
     return TRUE;
 }
 
-void RenderDeviceGL_Clear(u32 color)
+void RenderDeviceGL_Clear(color32 color)
 {
-    f32 a = (color & 0xFF) / 255.0f;
-    f32 b = ((color >> 8) & 0xFF) / 255.0f;
-    f32 g = ((color >> 16) & 0xFF) / 255.0f;
-    f32 r = ((color >> 24) & 0xFF) / 255.0f;
-    glClearColor(r, g, b, a);
+    color128 color128 = Color_32to128(&color);
+    glClearColor(color128.r, color128.g, color128.b, color128.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
