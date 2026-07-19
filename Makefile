@@ -14,10 +14,10 @@ LDFLAGS :=
 ifeq ($(PLATFORM), web)
 	CC := emcc
 	EXECUTABLE := index.html
-	CFLAGS += -pthread -std=gnu99
+	CFLAGS += -pthread -std=gnu11
 	LDFLAGS += -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -pthread
 else ifeq ($(UNAME), Linux)
-	CFLAGS += -std=c99
+	CFLAGS += -std=c11
 	LDFLAGS += -lX11 -lXcursor -lGL -lGLX -lm -lXrandr
 else ifeq ($(OS), Windows_NT)
 	EXECUTABLE += .exe
