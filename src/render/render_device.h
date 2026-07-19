@@ -6,7 +6,7 @@
 
 typedef void (*renderDevicePrepareProc_t)(void);
 typedef bool (*renderDeviceInitializeProc_t)(void);
-typedef void (*renderDeviceClearProc_t)(renderColor32_t color);
+typedef void (*renderDeviceClearProc_t)(renderClearDescriptor_t desc);
 typedef void (*renderDeviceSwapProc_t)(void);
 
 typedef struct

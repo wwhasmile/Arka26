@@ -1,3 +1,4 @@
+#include "render/render.h"
 #ifndef __EMSCRIPTEN__
 
 #include <sys/sys.h>
@@ -15,6 +16,14 @@ int main(int argc, char** argv)
     if (!device.initialize())
         return 1;
 
+    renderClearDescriptor_t clear = {
+        .surface = NULL,
+        .color = { 0x6496EDFF },
+        .tests = RENDER_TESTS_SCISSOR | RENDER_TESTS_VIEWPORT,
+        .scissorsRect = { 0, 0, 640, 480 },
+        .viewportRect = { 0, 0, 640, 480 },
+    };
+
     while (1)
     {
         sysEvent_t ev;
@@ -27,8 +36,7 @@ int main(int argc, char** argv)
             }
         }
 
-        renderColor32_t background = { 0x6496EDFF };
-        device.clear(background);
+        device.clear(clear);
         device.swap();
     }
 }

@@ -1,3 +1,4 @@
+#include "render/render.h"
 #include "render_device.h"
 
 #include <sys/sys_rgfw.h>
@@ -22,7 +23,7 @@ static struct
 
 static void RenderDeviceGL_Prepare(void);
 static bool RenderDeviceGL_Initialize(void);
-static void RenderDeviceGL_Clear(renderColor32_t color);
+static void RenderDeviceGL_Clear(renderClearDescriptor_t desc);
 static void RenderDeviceGL_Swap(void);
 
 void RenderDevice_CreateGL(renderDevice_t *device)
@@ -57,9 +58,16 @@ bool RenderDeviceGL_Initialize(void)
     return TRUE;
 }
 
-void RenderDeviceGL_Clear(renderColor32_t color)
+void RenderDeviceGL_Clear(renderClearDescriptor_t desc)
 {
-    renderColor_t converted = Render_ColorFrom32(color);
+    if (desc.tests & RENDER_TESTS_SCISSOR)
+    {
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(desc.scissorsRect.x, desc.scissorsRect.y, desc.scissorsRect.width, desc.scissorsRect.height);
+    }
+    if (desc.tests & RENDER_TESTS_VIEWPORT)
+        glViewport(desc.viewportRect.x, desc.viewportRect.y, desc.viewportRect.width, desc.viewportRect.height);
+    renderColor_t converted = Render_ColorFrom32(desc.color);
     glClearColor(converted.r, converted.g, converted.b, converted.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
