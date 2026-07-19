@@ -3,10 +3,6 @@
 
 #include "render.h"
 
-typedef void* mesh_t;
-typedef void* texture_t;
-typedef void* surface_t;
-typedef void* shader_t;
 
 typedef void (*renderDevicePrepareProc_t)(void);
 typedef bool (*renderDeviceInitializeProc_t)(void);

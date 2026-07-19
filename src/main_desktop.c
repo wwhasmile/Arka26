@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv)
 {
-    renderDevice device;
+    renderDevice_t device;
     RenderDevice_CreateGL(&device);
     device.prepare();
 
@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 
     while (1)
     {
-        sysEvent ev;
+        sysEvent_t ev;
         while (Sys_TryPollEvent(&ev))
         {
             if (ev.type == SYS_EVENT_WINDOW_CLOSED)

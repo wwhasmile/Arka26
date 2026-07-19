@@ -5,11 +5,11 @@
 
 #include <emscripten/emscripten.h>
 
-static renderDevice device;
+static renderDevice_t device;
 
 static void Main_Loop(void)
 {
-    sysEvent ev;
+    sysEvent_t ev;
     while (Sys_TryPollEvent(&ev))
     {
         if (ev.type == SYS_EVENT_WINDOW_CLOSED)
