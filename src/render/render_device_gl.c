@@ -35,10 +35,10 @@ void RenderDeviceGL_Prepare(void)
 
 bool RenderDeviceGL_Initialize(void)
 {
-    #ifndef __EMSCRIPTEN__
     sysState_RGFW* state = Sys_GetStateRGFW();
     RGFW_window_makeCurrentContext_OpenGL(state->window);
 
+    #ifndef __EMSCRIPTEN__
     if (!gladLoadGLLoader((GLADloadproc)RGFW_getProcAddress_OpenGL))
         return FALSE;
     #endif // __EMSCRIPTEN__
