@@ -8,17 +8,19 @@ static sysState_RGFW s_sysState;
 
 bool Sys_Initialize(const char *title, const char *appName, i32 width, i32 height, sysFlags flags)
 {
-    if (RGFW_init(appName, 0) != 0)
+    RGFW_globalHints_OpenGL_SRC.major = 3;
+    RGFW_globalHints_OpenGL->minor = 3;
+
+    if (RGFW_init(appName, s_sysState.rgfwInitFlags) != 0)
         return FALSE;
 
-    RGFW_windowFlags rgfwFlags = RGFW_windowCenter;
+    RGFW_windowFlags rgfwFlags = RGFW_windowCenter | RGFW_windowHide | RGFW_windowHideMouse;
     rgfwFlags = RGFW_windowCenter;
 
     if (!(flags & SYS_FLAGS_RESIZABLE))
         rgfwFlags |= RGFW_windowNoResize;
 
-    s_sysState.window = RGFW_createWindow(title, 0, 0, width, height, rgfwFlags);
-    RGFW_window_showMouse(s_sysState.window, FALSE);
+    s_sysState.window = RGFW_createWindow(title, 0, 0, width, height, rgfwFlags | s_sysState.rgfwWindowFlags);
     if (flags & SYS_FLAGS_FULLSCREEN)
         Sys_SetFullscreen(TRUE);
     s_sysState.flags = flags;
