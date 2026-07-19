@@ -8,7 +8,7 @@ typedef enum
     SYS_FLAGS_RESIZABLE = 1 << 0,
     SYS_FLAGS_FULLSCREEN = 1 << 1,
     SYS_FLAGS_VSYNC = 1 << 2,
-} sysFlags;
+} sysFlags_t;
 
 typedef enum
 {
@@ -21,33 +21,33 @@ typedef enum
 	SYS_EVENT_WINDOW_UNFOCUSED,
 	SYS_EVENT_WINDOW_CLOSED,
 	SYS_EVENT_MAX
-} sysEventType;
+} sysEventType_t;
 
 typedef union
 {
-    sysEventType type;
+    sysEventType_t type;
     struct
     {
-        sysEventType type;
+        sysEventType_t type;
         u8 code;
         u8 mod;
     } key;
     struct
     {
-        sysEventType type;
+        sysEventType_t type;
         u32 value;
     } keyChar;
     struct
     {
-        sysEventType type;
+        sysEventType_t type;
         i32 width;
         i32 height;
     } windowResized;
-} sysEvent;
+} sysEvent_t;
 
-bool Sys_Initialize(const char* title, const char* appName, i32 width, i32 height, sysFlags flags);
+bool Sys_Initialize(const char* title, const char* appName, i32 width, i32 height, sysFlags_t flags);
 
-bool Sys_TryPollEvent(sysEvent* event);
+bool Sys_TryPollEvent(sysEvent_t* event);
 
 void Sys_SetFullscreen(bool enable);
 bool Sys_IsFullscreen(void);

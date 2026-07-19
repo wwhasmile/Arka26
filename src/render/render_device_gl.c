@@ -23,27 +23,27 @@ static struct
 
 static void RenderDeviceGL_Prepare(void);
 static bool RenderDeviceGL_Initialize(void);
-static void RenderDeviceGL_Clear(color32 color);
+static void RenderDeviceGL_Clear(color32_t color);
 static void RenderDeviceGL_Swap(void);
 
-void RenderDevice_CreateGL(renderDevice *device)
+void RenderDevice_CreateGL(renderDevice_t *device)
 {
-    device->prepare = (renderDevicePrepareProc)RenderDeviceGL_Prepare;
-    device->initialize = (renderDeviceInitializeProc)RenderDeviceGL_Initialize;
-    device->clear = (renderDeviceClearProc)RenderDeviceGL_Clear;
-    device->swap = (renderDeviceSwapProc)RenderDeviceGL_Swap;
+    device->prepare = (renderDevicePrepareProc_t)RenderDeviceGL_Prepare;
+    device->initialize = (renderDeviceInitializeProc_t)RenderDeviceGL_Initialize;
+    device->clear = (renderDeviceClearProc_t)RenderDeviceGL_Clear;
+    device->swap = (renderDeviceSwapProc_t)RenderDeviceGL_Swap;
 }
 
 void RenderDeviceGL_Prepare(void)
 {
-    sysState_RGFW* state = Sys_GetStateRGFW();
+    sysStateRGFW_t* state = Sys_GetStateRGFW();
     state->rgfwInitFlags |= RGFW_initOpenGL;
     state->rgfwWindowFlags |= RGFW_windowOpenGL;
 }
 
 bool RenderDeviceGL_Initialize(void)
 {
-    sysState_RGFW* state = Sys_GetStateRGFW();
+    sysStateRGFW_t* state = Sys_GetStateRGFW();
     RGFW_window_makeCurrentContext_OpenGL(state->window);
 
     #ifndef __EMSCRIPTEN__
@@ -58,15 +58,15 @@ bool RenderDeviceGL_Initialize(void)
     return TRUE;
 }
 
-void RenderDeviceGL_Clear(color32 color)
+void RenderDeviceGL_Clear(color32_t color)
 {
-    color128 color128 = Color_32to128(&color);
-    glClearColor(color128.r, color128.g, color128.b, color128.a);
+    color_t converted = Color_From32(&color);
+    glClearColor(converted.r, converted.g, converted.b, converted.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void RenderDeviceGL_Swap(void)
 {
-    sysState_RGFW* state = Sys_GetStateRGFW();
+    sysStateRGFW_t* state = Sys_GetStateRGFW();
     RGFW_window_swapBuffers_OpenGL(state->window);
 }

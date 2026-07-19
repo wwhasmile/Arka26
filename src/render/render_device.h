@@ -4,26 +4,26 @@
 #include <core/defines.h>
 #include <core/color.h>
 
-typedef void* Mesh;
-typedef void* Texture;
-typedef void* Surface;
-typedef void* Shader;
+typedef void* mesh_t;
+typedef void* texture_t;
+typedef void* surface_t;
+typedef void* shader_t;
 
-typedef void (*renderDevicePrepareProc)(void);
-typedef bool (*renderDeviceInitializeProc)(void);
-typedef void (*renderDeviceClearProc)(color32 color);
-typedef void (*renderDeviceSwapProc)(void);
+typedef void (*renderDevicePrepareProc_t)(void);
+typedef bool (*renderDeviceInitializeProc_t)(void);
+typedef void (*renderDeviceClearProc_t)(color32_t color);
+typedef void (*renderDeviceSwapProc_t)(void);
 
 typedef struct
 {
-    renderDevicePrepareProc prepare;
-    renderDeviceInitializeProc initialize;
+    renderDevicePrepareProc_t prepare;
+    renderDeviceInitializeProc_t initialize;
 
-    renderDeviceClearProc clear;
+    renderDeviceClearProc_t clear;
 
-    renderDeviceSwapProc swap;
-} renderDevice;
+    renderDeviceSwapProc_t swap;
+} renderDevice_t;
 
-void RenderDevice_CreateGL(renderDevice* device);
+void RenderDevice_CreateGL(renderDevice_t* device);
 
 #endif // __RENDER_DEVICE_H__

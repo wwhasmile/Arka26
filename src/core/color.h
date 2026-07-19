@@ -14,7 +14,7 @@ typedef union
         u8 g;
         u8 r;
     };
-} color32;
+} color32_t;
 
 typedef struct
 {
@@ -26,12 +26,12 @@ typedef struct
         f32 g;
         f32 r;
     };
-} color128;
+} color_t;
 
-FORCE_INLINE color128 Color_32to128(const color32* source)
+FORCE_INLINE color_t Color_From32(const color32_t* source)
 {
     f32 div = 1.0f / 255.0f;
-    return (color128) {
+    return (color_t) {
         .r = source->r * div,
         .g = source->g * div,
         .b = source->b * div,
@@ -39,9 +39,9 @@ FORCE_INLINE color128 Color_32to128(const color32* source)
     };
 }
 
-FORCE_INLINE color32 Color_128to32(const color128* source)
+FORCE_INLINE color32_t Color_To32(const color_t* source)
 {
-    return (color32) {
+    return (color32_t) {
         .r = (u8)(source->r * 255),
         .g = (u8)(source->g * 255),
         .b = (u8)(source->b * 255),

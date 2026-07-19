@@ -16,12 +16,12 @@ typedef struct
     i32 height;
     i32 lastX;
     i32 lastY;
-    sysFlags flags;
+    sysFlags_t flags;
     RGFW_initFlags rgfwInitFlags;
     RGFW_windowFlags rgfwWindowFlags;
     RGFW_window* window;
-} sysState_RGFW;
+} sysStateRGFW_t;
 
-sysState_RGFW* Sys_GetStateRGFW(void);
+sysStateRGFW_t* Sys_GetStateRGFW(void);
 
 #endif // __SYS_RGFW_H__

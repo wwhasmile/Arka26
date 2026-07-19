@@ -4,9 +4,9 @@
 
 #include <stdlib.h>
 
-static sysState_RGFW s_sysState;
+static sysStateRGFW_t s_sysState;
 
-bool Sys_Initialize(const char *title, const char *appName, i32 width, i32 height, sysFlags flags)
+bool Sys_Initialize(const char *title, const char *appName, i32 width, i32 height, sysFlags_t flags)
 {
     RGFW_globalHints_OpenGL_SRC.major = 3;
     RGFW_globalHints_OpenGL->minor = 3;
@@ -32,9 +32,9 @@ bool Sys_Initialize(const char *title, const char *appName, i32 width, i32 heigh
     return TRUE;
 }
 
-bool Sys_TryPollEvent(sysEvent* event)
+bool Sys_TryPollEvent(sysEvent_t* event)
 {
-    sysEvent resultEvent = { 0 };
+    sysEvent_t resultEvent = { 0 };
 
     RGFW_event ev;
     if (!RGFW_window_checkEvent(s_sysState.window, &ev))
@@ -120,7 +120,7 @@ void Sys_Quit(void)
     exit(0);
 }
 
-sysState_RGFW* Sys_GetStateRGFW(void)
+sysStateRGFW_t* Sys_GetStateRGFW(void)
 {
     return &s_sysState;
 }
