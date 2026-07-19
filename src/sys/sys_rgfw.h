@@ -17,6 +17,8 @@ typedef struct
     i32 lastX;
     i32 lastY;
     sysFlags flags;
+    RGFW_initFlags rgfwInitFlags;
+    RGFW_windowFlags rgfwWindowFlags;
     RGFW_window* window;
 } sysState_RGFW;
 
