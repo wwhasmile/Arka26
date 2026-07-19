@@ -35,6 +35,14 @@ typedef struct
 
 typedef enum
 {
+    RENDER_TEXTURE_FORMAT_RGBA,
+    RENDER_TEXTURE_FORMAT_RGB,
+    RENDER_TEXTURE_FORMAT_RED,
+    RENDER_TEXTURE_FORMAT_DEPTH_STENCIL,
+} renderTextureFormat_t;
+
+typedef enum
+{
     RENDER_TEXTURE_FILTER_NEAREST,
     RENDER_TEXTURE_FILTER_LINEAR,
 } renderTextureFilter_t;
