@@ -1,4 +1,3 @@
-#include "core/color.h"
 #include "render_device.h"
 
 #include <sys/sys_rgfw.h>
@@ -23,7 +22,7 @@ static struct
 
 static void RenderDeviceGL_Prepare(void);
 static bool RenderDeviceGL_Initialize(void);
-static void RenderDeviceGL_Clear(color32_t color);
+static void RenderDeviceGL_Clear(renderColor32_t color);
 static void RenderDeviceGL_Swap(void);
 
 void RenderDevice_CreateGL(renderDevice_t *device)
@@ -58,9 +57,9 @@ bool RenderDeviceGL_Initialize(void)
     return TRUE;
 }
 
-void RenderDeviceGL_Clear(color32_t color)
+void RenderDeviceGL_Clear(renderColor32_t color)
 {
-    color_t converted = Color_From32(&color);
+    renderColor_t converted = Render_ColorFrom32(color);
     glClearColor(converted.r, converted.g, converted.b, converted.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

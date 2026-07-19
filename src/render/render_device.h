@@ -1,8 +1,7 @@
 #ifndef __RENDER_DEVICE_H__
 #define __RENDER_DEVICE_H__
 
-#include <core/defines.h>
-#include <core/color.h>
+#include "render.h"
 
 typedef void* mesh_t;
 typedef void* texture_t;
@@ -11,7 +10,7 @@ typedef void* shader_t;
 
 typedef void (*renderDevicePrepareProc_t)(void);
 typedef bool (*renderDeviceInitializeProc_t)(void);
-typedef void (*renderDeviceClearProc_t)(color32_t color);
+typedef void (*renderDeviceClearProc_t)(renderColor32_t color);
 typedef void (*renderDeviceSwapProc_t)(void);
 
 typedef struct

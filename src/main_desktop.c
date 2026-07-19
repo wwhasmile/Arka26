@@ -2,7 +2,6 @@
 
 #include <sys/sys.h>
 #include <render/render_device.h>
-#include <core/color.h>
 
 int main(int argc, char** argv)
 {
@@ -28,7 +27,7 @@ int main(int argc, char** argv)
             }
         }
 
-        color32 background = { 0x6496EDFF };
+        renderColor32_t background = { 0x6496EDFF };
         device.clear(background);
         device.swap();
     }
