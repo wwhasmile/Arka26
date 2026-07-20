@@ -8,6 +8,11 @@ typedef struct
     void (*prepare)(void);
     bool (*initialize)(void);
 
+    renderMesh_t* (*meshCreate)(renderMeshMode_t);
+    void (*meshUploadVertices)(renderMesh_t*, void*, u32, u32);
+    void (*meshUploadElements)(renderMesh_t*, void*, u32, u32);
+    void (*meshRelease)(renderMesh_t*);
+
     renderTexture_t* (*textureCreate)(u32, u32, renderTextureFormat_t);
     void (*textureUpload)(renderTexture_t*, u8*);
     void (*textureRelease)(renderTexture_t*);
