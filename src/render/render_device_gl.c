@@ -36,8 +36,6 @@ typedef struct
 
 static struct
 {
-    RGFW_glContext* context;
-
     GLuint vao;
     GLuint vbo;
     GLuint ebo;
@@ -69,8 +67,8 @@ void RenderDevice_CreateGL(renderDevice_t *device)
     device->textureUpload = RenderDeviceGL_TextureUpload;
     device->textureRelease = RenderDeviceGL_TextureRelease;
     device->meshCreate = RenderDeviceGL_MeshCreate;
-    device->meshUploadVertices = RenderDeviceGL_MeshUploadVertices;
-    device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
+    // device->meshUploadVertices = RenderDeviceGL_MeshUploadVertices;
+    // device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
     device->meshRelease = RenderDeviceGL_MeshRelease;
     device->clear = RenderDeviceGL_Clear;
     device->swap = RenderDeviceGL_Swap;
@@ -85,11 +83,10 @@ void RenderDeviceGL_Prepare(void)
 
 bool RenderDeviceGL_Initialize(void)
 {
-    sysStateRGFW_t* state = Sys_GetStateRGFW();
-    RGFW_window_makeCurrentContext_OpenGL(state->window);
+    Sys_ActivateContextGL();
 
     #ifndef __EMSCRIPTEN__
-    if (!gladLoadGLLoader((GLADloadproc)RGFW_getProcAddress_OpenGL))
+    if (!gladLoadGLLoader((GLADloadproc)Sys_GetProcAddressGL))
         return FALSE;
     #endif // __EMSCRIPTEN__
 
@@ -192,8 +189,7 @@ void RenderDeviceGL_Clear(renderClearDescriptor_t desc)
 
 void RenderDeviceGL_Swap(void)
 {
-    sysStateRGFW_t* state = Sys_GetStateRGFW();
-    RGFW_window_swapBuffers_OpenGL(state->window);
+    Sys_SwapGL();
 }
 
 void RenderDeviceGL_TextureBind(GLuint id)

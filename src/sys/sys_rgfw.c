@@ -130,6 +130,8 @@ void Sys_SwapGL(void)
     RGFW_window_swapBuffers_OpenGL(s_sysState.window);
 }
 
+void* (*Sys_GetProcAddressGL)(const char* func) = (void*(*)(const char*))RGFW_getProcAddress_OpenGL;
+
 sysStateRGFW_t* Sys_GetStateRGFW(void)
 {
     return &s_sysState;

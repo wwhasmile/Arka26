@@ -26,6 +26,8 @@ void Sys_ActivateContextGL(void);
 
 void Sys_SwapGL(void);
 
+extern void* (*Sys_GetProcAddressGL)(const char*);
+
 sysStateRGFW_t* Sys_GetStateRGFW(void);
 
 #endif // __SYS_RGFW_H__

@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     renderClearDescriptor_t clear = {
         .surface = NULL,
         .color = { 0x6496EDFF },
-        .tests = RENDER_TESTS_SCISSOR | RENDER_TESTS_VIEWPORT,
+        .tests = RENDER_TEST_SCISSOR | RENDER_TEST_VIEWPORT,
         .scissorsRect = { 0, 0, 640, 480 },
         .viewportRect = { 0, 0, 640, 480 },
     };
