@@ -1,3 +1,4 @@
+#include "render/render.h"
 #include "render_device.h"
 
 #include <sys/sys_rgfw.h>
@@ -14,6 +15,18 @@
 typedef struct
 {
     GLuint id;
+    GLuint vbo;
+    GLuint ebo;
+
+    u32 vertexAttributes;
+
+    u32 vertexBufferSize;
+    u32 elementBufferSize;
+} renderMeshGL_t;
+
+typedef struct
+{
+    GLuint id;
     GLsizei width;
     GLsizei height;
     GLenum format;
@@ -24,8 +37,8 @@ typedef struct
 static struct
 {
     RGFW_glContext* context;
-    GLuint vao;
 
+    GLuint vao;
     GLuint vbo;
     GLuint ebo;
     GLuint fbo;
@@ -35,18 +48,27 @@ static struct
 
 static void RenderDeviceGL_Prepare(void);
 static bool RenderDeviceGL_Initialize(void);
+static renderMesh_t* RenderDeviceGL_MeshCreate(void);
+static void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage);
+static void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage);
+static void RenderDeviceGL_MeshRelease(renderMesh_t* mesh);
 static renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextureFormat_t format);
-static void RenderDeviceGL_TextureUpload(renderTexture_t* texture, u8* data);
+static void RenderDeviceGL_TextureUpload(renderTexture_t* texture, void* data);
 static void RenderDeviceGL_TextureRelease(renderTexture_t* texture);
 static void RenderDeviceGL_Clear(renderClearDescriptor_t desc);
 static void RenderDeviceGL_Swap(void);
 
+INLINE static void RenderDeviceGL_VaoBind(GLuint id);
 INLINE static void RenderDeviceGL_TextureBind(GLuint id);
 
 void RenderDevice_CreateGL(renderDevice_t *device)
 {
     device->prepare = RenderDeviceGL_Prepare;
     device->initialize = RenderDeviceGL_Initialize;
+    device->meshCreate = RenderDeviceGL_MeshCreate;
+    device->meshUploadVertices = RenderDeviceGL_MeshUploadVertices;
+    device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
+    device->meshRelease = RenderDeviceGL_MeshRelease;
     device->textureCreate = RenderDeviceGL_TextureCreate;
     device->textureUpload = RenderDeviceGL_TextureUpload;
     device->textureRelease = RenderDeviceGL_TextureRelease;
@@ -71,11 +93,32 @@ bool RenderDeviceGL_Initialize(void)
         return FALSE;
     #endif // __EMSCRIPTEN__
 
-    glGenVertexArrays(1, &s_renderStateGL.vao);
-    if (s_renderStateGL.vao == 0)
-        return FALSE;
-    glBindVertexArray(s_renderStateGL.vao);
     return TRUE;
+}
+
+renderMesh_t* RenderDeviceGL_MeshCreate(void)
+{
+    renderMeshGL_t result = { 0 };
+    glGenVertexArrays(1, &result.id);
+    if (result.id == 0) return NULL;
+
+    renderMeshGL_t* mesh = (renderMeshGL_t*)malloc(sizeof(renderMeshGL_t));
+    *mesh = result;
+    return (renderMesh_t*)mesh;
+}
+
+void RenderDeviceGL_MeshRelease(renderMesh_t* mesh)
+{
+    renderMeshGL_t* m = (renderMeshGL_t*)mesh;
+
+    if (m->vbo != 0)
+        glDeleteBuffers(1, &m->vbo);
+    if (m->ebo != 0)
+        glDeleteBuffers(1, &m->ebo);
+    if (m->id != 0)
+        glDeleteVertexArrays(1, &m->id);
+
+    free(m);
 }
 
 renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextureFormat_t format)
@@ -117,7 +160,7 @@ renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextu
     return (renderTexture_t*)result;
 }
 
-void RenderDeviceGL_TextureUpload(renderTexture_t* texture, u8* data)
+void RenderDeviceGL_TextureUpload(renderTexture_t* texture, void* data)
 {
     renderTextureGL_t* tex = (renderTextureGL_t*)texture;
 
@@ -135,12 +178,12 @@ void RenderDeviceGL_TextureRelease(renderTexture_t* texture)
 
 void RenderDeviceGL_Clear(renderClearDescriptor_t desc)
 {
-    if (desc.tests & RENDER_TESTS_SCISSOR)
+    if (desc.tests & RENDER_TEST_SCISSOR)
     {
         glEnable(GL_SCISSOR_TEST);
         glScissor(desc.scissorsRect.x, desc.scissorsRect.y, desc.scissorsRect.width, desc.scissorsRect.height);
     }
-    if (desc.tests & RENDER_TESTS_VIEWPORT)
+    if (desc.tests & RENDER_TEST_VIEWPORT)
         glViewport(desc.viewportRect.x, desc.viewportRect.y, desc.viewportRect.width, desc.viewportRect.height);
     renderColor_t converted = Render_ColorFrom32(desc.color);
     glClearColor(converted.r, converted.g, converted.b, converted.a);
@@ -153,8 +196,20 @@ void RenderDeviceGL_Swap(void)
     RGFW_window_swapBuffers_OpenGL(state->window);
 }
 
+void RenderDeviceGL_VaoBind(GLuint id)
+{
+    if (s_renderStateGL.vao != id)
+    {
+        glBindVertexArray(id);
+        s_renderStateGL.vao = id;
+    }
+}
+
 void RenderDeviceGL_TextureBind(GLuint id)
 {
-    if (s_renderStateGL.texture == id) return;
-    glBindTexture(GL_TEXTURE_2D, id);
+    if (s_renderStateGL.texture != id)
+    {
+        glBindTexture(GL_TEXTURE_2D, id);
+        s_renderStateGL.texture = id;
+    }
 }

@@ -33,47 +33,65 @@ typedef struct
     };
 } renderColor_t;
 
-typedef enum
+ENUM(renderTextureFormat_t, u8)
 {
     RENDER_TEXTURE_FORMAT_RGBA,
     RENDER_TEXTURE_FORMAT_RGB,
     RENDER_TEXTURE_FORMAT_RED,
     RENDER_TEXTURE_FORMAT_DEPTH_STENCIL,
-} renderTextureFormat_t;
+};
 
-typedef enum
+ENUM(renderTextureFilter_t, u8)
 {
     RENDER_TEXTURE_FILTER_NEAREST,
     RENDER_TEXTURE_FILTER_LINEAR,
-} renderTextureFilter_t;
+};
 
-typedef enum
+ENUM(renderTextureWrap_t, u8)
 {
     RENDER_TEXTURE_WRAP_CLAMP,
     RENDER_TEXTURE_WRAP_REPEAT,
     RENDER_TEXTURE_WRAP_MIRROR
-} renderTextureWrap_t;
+};
 
 typedef struct
 {
-    u8 filter;
-    u8 horizontalWrap;
-    u8 verticalWrap;
-    u8 _padding0;
+    renderTextureFilter_t filter;
+    renderTextureWrap_t horizontalWrap;
+    renderTextureWrap_t verticalWrap;
 } renderTextureSampler_t;
 
-typedef enum
+ENUM(renderVertexDataUsage_t, u8)
 {
-    RENDER_MESH_MODES_DYNAMIC,
-    RENDER_MESH_MODES_STATIC,
-} renderMeshMode_t;
+    RENDER_VERTEX_DATA_USAGE_DYNAMIC,
+    RENDER_VERTEX_DATA_USAGE_STATIC,
+};
 
-typedef enum
+ENUM(renderVertexAttributeType_t, u8)
 {
-    RENDER_TESTS_BLEND = 1 << 0,
-    RENDER_TESTS_SCISSOR = 1 << 1,
-    RENDER_TESTS_VIEWPORT = 1 << 2,
-} renderTests_t;
+    RENDER_VERTEX_ATTRIBUTE_TYPE_NONE,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_INT,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_UINT,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_UBYTE,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_UBYTE4,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT2,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT3,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT4,
+};
+
+typedef struct
+{
+    renderVertexAttributeType_t type : 7;
+    bool normalized : 1;
+} renderVertexAttribute_t;
+
+ENUM(renderTests_t, u8)
+{
+    RENDER_TEST_BLEND = 1 << 0,
+    RENDER_TEST_SCISSOR = 1 << 1,
+    RENDER_TEST_VIEWPORT = 1 << 2,
+};
 
 typedef struct
 {
