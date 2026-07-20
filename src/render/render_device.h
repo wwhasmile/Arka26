@@ -3,20 +3,18 @@
 
 #include "render.h"
 
-
-typedef void (*renderDevicePrepareProc_t)(void);
-typedef bool (*renderDeviceInitializeProc_t)(void);
-typedef void (*renderDeviceClearProc_t)(renderClearDescriptor_t desc);
-typedef void (*renderDeviceSwapProc_t)(void);
-
 typedef struct
 {
-    renderDevicePrepareProc_t prepare;
-    renderDeviceInitializeProc_t initialize;
+    void (*prepare)(void);
+    bool (*initialize)(void);
 
-    renderDeviceClearProc_t clear;
+    renderTexture_t* (*textureCreate)(u32, u32, renderTextureFormat_t);
+    void (*textureUpload)(renderTexture_t*, u8*);
+    void (*textureRelease)(renderTexture_t*);
 
-    renderDeviceSwapProc_t swap;
+    void (*clear)(renderClearDescriptor_t);
+
+    void (*swap)(void);
 } renderDevice_t;
 
 void RenderDevice_CreateGL(renderDevice_t* device);
