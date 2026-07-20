@@ -48,30 +48,30 @@ static struct
 
 static void RenderDeviceGL_Prepare(void);
 static bool RenderDeviceGL_Initialize(void);
+static renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextureFormat_t format);
+static void RenderDeviceGL_TextureUpload(renderTexture_t* texture, void* data);
+static void RenderDeviceGL_TextureRelease(renderTexture_t* texture);
 static renderMesh_t* RenderDeviceGL_MeshCreate(void);
 static void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage);
 static void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage);
 static void RenderDeviceGL_MeshRelease(renderMesh_t* mesh);
-static renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextureFormat_t format);
-static void RenderDeviceGL_TextureUpload(renderTexture_t* texture, void* data);
-static void RenderDeviceGL_TextureRelease(renderTexture_t* texture);
 static void RenderDeviceGL_Clear(renderClearDescriptor_t desc);
 static void RenderDeviceGL_Swap(void);
 
-INLINE static void RenderDeviceGL_VaoBind(GLuint id);
 INLINE static void RenderDeviceGL_TextureBind(GLuint id);
+INLINE static void RenderDeviceGL_VaoBind(GLuint id);
 
 void RenderDevice_CreateGL(renderDevice_t *device)
 {
     device->prepare = RenderDeviceGL_Prepare;
     device->initialize = RenderDeviceGL_Initialize;
+    device->textureCreate = RenderDeviceGL_TextureCreate;
+    device->textureUpload = RenderDeviceGL_TextureUpload;
+    device->textureRelease = RenderDeviceGL_TextureRelease;
     device->meshCreate = RenderDeviceGL_MeshCreate;
     device->meshUploadVertices = RenderDeviceGL_MeshUploadVertices;
     device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
     device->meshRelease = RenderDeviceGL_MeshRelease;
-    device->textureCreate = RenderDeviceGL_TextureCreate;
-    device->textureUpload = RenderDeviceGL_TextureUpload;
-    device->textureRelease = RenderDeviceGL_TextureRelease;
     device->clear = RenderDeviceGL_Clear;
     device->swap = RenderDeviceGL_Swap;
 }
@@ -94,31 +94,6 @@ bool RenderDeviceGL_Initialize(void)
     #endif // __EMSCRIPTEN__
 
     return TRUE;
-}
-
-renderMesh_t* RenderDeviceGL_MeshCreate(void)
-{
-    renderMeshGL_t result = { 0 };
-    glGenVertexArrays(1, &result.id);
-    if (result.id == 0) return NULL;
-
-    renderMeshGL_t* mesh = (renderMeshGL_t*)malloc(sizeof(renderMeshGL_t));
-    *mesh = result;
-    return (renderMesh_t*)mesh;
-}
-
-void RenderDeviceGL_MeshRelease(renderMesh_t* mesh)
-{
-    renderMeshGL_t* m = (renderMeshGL_t*)mesh;
-
-    if (m->vbo != 0)
-        glDeleteBuffers(1, &m->vbo);
-    if (m->ebo != 0)
-        glDeleteBuffers(1, &m->ebo);
-    if (m->id != 0)
-        glDeleteVertexArrays(1, &m->id);
-
-    free(m);
 }
 
 renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextureFormat_t format)
@@ -176,6 +151,31 @@ void RenderDeviceGL_TextureRelease(renderTexture_t* texture)
     free(tex);
 }
 
+renderMesh_t* RenderDeviceGL_MeshCreate(void)
+{
+    renderMeshGL_t result = { 0 };
+    glGenVertexArrays(1, &result.id);
+    if (result.id == 0) return NULL;
+
+    renderMeshGL_t* mesh = (renderMeshGL_t*)malloc(sizeof(renderMeshGL_t));
+    *mesh = result;
+    return (renderMesh_t*)mesh;
+}
+
+void RenderDeviceGL_MeshRelease(renderMesh_t* mesh)
+{
+    renderMeshGL_t* m = (renderMeshGL_t*)mesh;
+
+    if (m->vbo != 0)
+        glDeleteBuffers(1, &m->vbo);
+    if (m->ebo != 0)
+        glDeleteBuffers(1, &m->ebo);
+    if (m->id != 0)
+        glDeleteVertexArrays(1, &m->id);
+
+    free(m);
+}
+
 void RenderDeviceGL_Clear(renderClearDescriptor_t desc)
 {
     if (desc.tests & RENDER_TEST_SCISSOR)
@@ -196,20 +196,20 @@ void RenderDeviceGL_Swap(void)
     RGFW_window_swapBuffers_OpenGL(state->window);
 }
 
-void RenderDeviceGL_VaoBind(GLuint id)
-{
-    if (s_renderStateGL.vao != id)
-    {
-        glBindVertexArray(id);
-        s_renderStateGL.vao = id;
-    }
-}
-
 void RenderDeviceGL_TextureBind(GLuint id)
 {
     if (s_renderStateGL.texture != id)
     {
         glBindTexture(GL_TEXTURE_2D, id);
         s_renderStateGL.texture = id;
+    }
+}
+
+void RenderDeviceGL_VaoBind(GLuint id)
+{
+    if (s_renderStateGL.vao != id)
+    {
+        glBindVertexArray(id);
+        s_renderStateGL.vao = id;
     }
 }

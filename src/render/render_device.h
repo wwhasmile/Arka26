@@ -8,14 +8,14 @@ typedef struct
     void (*prepare)(void);
     bool (*initialize)(void);
 
+    renderTexture_t* (*textureCreate)(u32, u32, renderTextureFormat_t);
+    void (*textureUpload)(renderTexture_t*, void*);
+    void (*textureRelease)(renderTexture_t*);
+
     renderMesh_t* (*meshCreate)(void);
     void (*meshUploadVertices)(renderMesh_t*, void*, u32, u32, renderVertexDataUsage_t);
     void (*meshUploadElements)(renderMesh_t*, void*, u32, u32, renderVertexDataUsage_t);
     void (*meshRelease)(renderMesh_t*);
-
-    renderTexture_t* (*textureCreate)(u32, u32, renderTextureFormat_t);
-    void (*textureUpload)(renderTexture_t*, void*);
-    void (*textureRelease)(renderTexture_t*);
 
     void (*clear)(renderClearDescriptor_t);
 
