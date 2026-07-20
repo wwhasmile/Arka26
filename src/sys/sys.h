@@ -3,14 +3,14 @@
 
 #include <core/defines.h>
 
-typedef enum
+ENUM(sysFlags_t, u8)
 {
     SYS_FLAGS_RESIZABLE = 1 << 0,
     SYS_FLAGS_FULLSCREEN = 1 << 1,
     SYS_FLAGS_VSYNC = 1 << 2,
-} sysFlags_t;
+};
 
-typedef enum
+ENUM(sysEventType_t, u8)
 {
     SYS_EVENT_NONE,
  	SYS_EVENT_KEY_PRESSED,
@@ -21,7 +21,7 @@ typedef enum
 	SYS_EVENT_WINDOW_UNFOCUSED,
 	SYS_EVENT_WINDOW_CLOSED,
 	SYS_EVENT_MAX
-} sysEventType_t;
+};
 
 typedef union
 {
