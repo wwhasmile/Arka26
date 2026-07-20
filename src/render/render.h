@@ -64,6 +64,12 @@ typedef struct
 
 typedef enum
 {
+    RENDER_MESH_MODES_DYNAMIC,
+    RENDER_MESH_MODES_STATIC,
+} renderMeshMode_t;
+
+typedef enum
+{
     RENDER_TESTS_BLEND = 1 << 0,
     RENDER_TESTS_SCISSOR = 1 << 1,
     RENDER_TESTS_VIEWPORT = 1 << 2,
