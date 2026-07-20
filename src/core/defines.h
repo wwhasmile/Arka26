@@ -34,4 +34,8 @@ typedef u8 bool;
 #define INLINE
 #endif // _NDEBUG
 
+#define ENUM(name, type) \
+    typedef type name; \
+    enum name
+
 #endif // __DEFINES_H__
