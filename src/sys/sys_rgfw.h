@@ -22,6 +22,10 @@ typedef struct
     RGFW_window* window;
 } sysStateRGFW_t;
 
+void Sys_ActivateContextGL(void);
+
+void Sys_SwapGL(void);
+
 sysStateRGFW_t* Sys_GetStateRGFW(void);
 
 #endif // __SYS_RGFW_H__

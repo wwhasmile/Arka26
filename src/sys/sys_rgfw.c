@@ -120,6 +120,16 @@ void Sys_Quit(void)
     exit(0);
 }
 
+void Sys_ActivateContextGL(void)
+{
+    RGFW_window_makeCurrentContext_OpenGL(s_sysState.window);
+}
+
+void Sys_SwapGL(void)
+{
+    RGFW_window_swapBuffers_OpenGL(s_sysState.window);
+}
+
 sysStateRGFW_t* Sys_GetStateRGFW(void)
 {
     return &s_sysState;
