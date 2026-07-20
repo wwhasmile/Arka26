@@ -13,6 +13,7 @@ typedef struct
     void (*textureRelease)(renderTexture_t*);
 
     renderMesh_t* (*meshCreate)(void);
+    void (*meshSetVertexAttributes)(renderMesh_t*, renderVertexAttribute_t*, u32);
     void (*meshUploadVertices)(renderMesh_t*, void*, u32, u32, renderVertexDataUsage_t);
     void (*meshUploadElements)(renderMesh_t*, void*, u32, u32, renderVertexDataUsage_t);
     void (*meshRelease)(renderMesh_t*);

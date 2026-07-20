@@ -8,7 +8,7 @@ UNAME := $(shell uname)
 MODE ?= debug
 
 CC ?= cc
-CFLAGS := -Wall -Wextra -Wpedantic -I$(SRC_DIR)
+CFLAGS := -Wall -Wextra -I$(SRC_DIR)
 LDFLAGS :=
 
 ifeq ($(PLATFORM), web)

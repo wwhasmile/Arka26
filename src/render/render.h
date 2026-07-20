@@ -61,18 +61,9 @@ typedef struct
     renderTextureWrap_t verticalWrap;
 } renderTextureSampler_t;
 
-ENUM(renderVertexDataUsage_t, u8)
-{
-    RENDER_VERTEX_DATA_USAGE_DYNAMIC,
-    RENDER_VERTEX_DATA_USAGE_STATIC,
-};
-
 ENUM(renderVertexAttributeType_t, u8)
 {
     RENDER_VERTEX_ATTRIBUTE_TYPE_NONE,
-    RENDER_VERTEX_ATTRIBUTE_TYPE_INT,
-    RENDER_VERTEX_ATTRIBUTE_TYPE_UINT,
-    RENDER_VERTEX_ATTRIBUTE_TYPE_UBYTE,
     RENDER_VERTEX_ATTRIBUTE_TYPE_UBYTE4,
     RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT,
     RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT2,
@@ -85,6 +76,12 @@ typedef struct
     renderVertexAttributeType_t type : 7;
     bool normalized : 1;
 } renderVertexAttribute_t;
+
+ENUM(renderVertexDataUsage_t, u8)
+{
+    RENDER_VERTEX_DATA_USAGE_DYNAMIC,
+    RENDER_VERTEX_DATA_USAGE_STATIC,
+};
 
 ENUM(renderTests_t, u8)
 {
