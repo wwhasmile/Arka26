@@ -21,7 +21,9 @@ typedef struct
     u32 vertexAttributes;
 
     u32 vertexBufferSize;
+    renderVertexDataUsage_t vertexBufferUsage;
     u32 elementBufferSize;
+    renderVertexDataUsage_t elementBufferUsage;
 } renderMeshGL_t;
 
 typedef struct
@@ -71,7 +73,7 @@ void RenderDevice_CreateGL(renderDevice_t *device)
     device->textureRelease = RenderDeviceGL_TextureRelease;
     device->meshCreate = RenderDeviceGL_MeshCreate;
     device->meshSetVertexAttributes = RenderDeviceGL_MeshSetVertexAttributes;
-    // device->meshUploadVertices = RenderDeviceGL_MeshUploadVertices;
+    device->meshUploadVertices = RenderDeviceGL_MeshUploadVertices;
     // device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
     device->meshRelease = RenderDeviceGL_MeshRelease;
     device->clear = RenderDeviceGL_Clear;
@@ -166,9 +168,19 @@ renderMesh_t* RenderDeviceGL_MeshCreate(void)
 void RenderDeviceGL_MeshSetVertexAttributes(renderMesh_t* mesh, renderVertexAttribute_t* attributes, u32 count)
 {
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
-
     RenderDeviceGL_VaoBind(m->id);
-    RenderDeviceGL_VboBind(m->vbo);
+
+    if (m->vbo == 0)
+    {
+        glGenBuffers(1, &m->vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, m->vbo);
+        s_renderStateGL.vbo = m->vbo;
+    }
+    else if (s_renderStateGL.vbo != m->vbo)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, m->vbo);
+        s_renderStateGL.vbo = m->vbo;
+    }
 
     u32 stride = 0;
     for (u32 i = 0; i < count; ++i)
@@ -242,6 +254,44 @@ void RenderDeviceGL_MeshSetVertexAttributes(renderMesh_t* mesh, renderVertexAttr
     }
 
     m->vertexAttributes = count;
+}
+
+void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage)
+{
+    renderMeshGL_t* m = (renderMeshGL_t*)mesh;
+    RenderDeviceGL_VaoBind(m->id);
+
+    if (m->vbo == 0)
+    {
+        glGenBuffers(1, &m->vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, m->vbo);
+        s_renderStateGL.vbo = m->vbo;
+    }
+    else if (s_renderStateGL.vbo != m->vbo)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, m->vbo);
+        s_renderStateGL.vbo = m->vbo;
+    }
+
+    u32 total = dest + size;
+    if (total > m->vertexBufferSize || usage != m->vertexBufferUsage)
+    {
+        GLenum glUsage = GL_DYNAMIC_DRAW;
+        switch (usage)
+        {
+            case RENDER_VERTEX_DATA_USAGE_DYNAMIC:
+                glUsage = GL_DYNAMIC_DRAW;
+                break;
+            case RENDER_VERTEX_DATA_USAGE_STATIC:
+                glUsage = GL_STATIC_DRAW;
+                break;
+        }
+
+        glBufferData(GL_ARRAY_BUFFER, total, NULL, glUsage);
+        m->vertexBufferUsage = usage;
+    }
+
+    glBufferSubData(GL_ARRAY_BUFFER, dest, size, data);
 }
 
 void RenderDeviceGL_MeshRelease(renderMesh_t* mesh)
