@@ -7,6 +7,14 @@
 
 static renderDevice_t device;
 
+static renderClearDescriptor_t clear = {
+        .surface = NULL,
+        .color = { 0x6496EDFF },
+        .tests = RENDER_TESTS_SCISSOR | RENDER_TESTS_VIEWPORT,
+        .scissorsRect = { 0, 0, 640, 480 },
+        .viewportRect = { 0, 0, 640, 480 },
+    };
+
 static void Main_Loop(void)
 {
     sysEvent_t ev;
@@ -18,7 +26,7 @@ static void Main_Loop(void)
             break;
         }
 
-        device.clear((color32) { 0x6496EDFF });
+        device.clear(clear);
         device.swap();
     }
 }
