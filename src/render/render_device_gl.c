@@ -74,7 +74,7 @@ void RenderDevice_CreateGL(renderDevice_t *device)
     device->meshCreate = RenderDeviceGL_MeshCreate;
     device->meshSetVertexAttributes = RenderDeviceGL_MeshSetVertexAttributes;
     device->meshUploadVertices = RenderDeviceGL_MeshUploadVertices;
-    // device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
+    device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
     device->meshRelease = RenderDeviceGL_MeshRelease;
     device->clear = RenderDeviceGL_Clear;
     device->swap = RenderDeviceGL_Swap;
@@ -289,9 +289,49 @@ void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size,
 
         glBufferData(GL_ARRAY_BUFFER, total, NULL, glUsage);
         m->vertexBufferUsage = usage;
+        m->vertexBufferSize = total;
     }
 
     glBufferSubData(GL_ARRAY_BUFFER, dest, size, data);
+}
+
+void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage)
+{
+    renderMeshGL_t* m = (renderMeshGL_t*)mesh;
+    RenderDeviceGL_VaoBind(m->id);
+
+    if (m->ebo == 0)
+    {
+        glGenBuffers(1, &m->ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->ebo);
+        s_renderStateGL.ebo = m->ebo;
+    }
+    else if (s_renderStateGL.ebo != m->ebo)
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->ebo);
+        s_renderStateGL.ebo = m->ebo;
+    }
+
+    u32 total = dest + size;
+    if (total > m->elementBufferSize || usage != m->elementBufferUsage)
+    {
+        GLenum glUsage = GL_DYNAMIC_DRAW;
+        switch (usage)
+        {
+            case RENDER_VERTEX_DATA_USAGE_DYNAMIC:
+                glUsage = GL_DYNAMIC_DRAW;
+                break;
+            case RENDER_VERTEX_DATA_USAGE_STATIC:
+                glUsage = GL_STATIC_DRAW;
+                break;
+        }
+
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, total, NULL, glUsage);
+        m->elementBufferUsage = usage;
+        m->elementBufferSize = total;
+    }
+
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, dest, size, data);
 }
 
 void RenderDeviceGL_MeshRelease(renderMesh_t* mesh)
