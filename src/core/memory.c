@@ -2,8 +2,8 @@
 
 #include <stdlib.h>
 
-static const u64 BASE_CHUNK_SIZE = 512;
-static const u64 BASE_ARENA_SIZE = 96 * 1024 * 1024;
+static const u64 BASE_CHUNK_SIZE = 128 * 1024 * 1024;
+static const u64 BASE_ARENA_SIZE = 256;
 
 ENUM(memoryChunkType_t, u32)
 {
@@ -21,21 +21,22 @@ typedef struct memoryChunk_t
     struct memoryChunk_t* previous;
 } memoryChunk_t;
 
-typedef struct memoryArena_t
+typedef struct memoryBump_t
 {
     u64 size;
     u64 origin;
     u64 taken;
-    struct memoryArena_t* previous;
-} memoryArena_t;
+    struct memoryBump_t* previous;
+} memoryBump_t;
 
 static struct
 {
     memoryChunk_t* rootChunk;
-    memoryArena_t* currentArena;
+    memoryBump_t* currentBump;
 } s_memoryState;
 
 static memoryChunk_t* Memory_ChunkBlockCreate(u64 size, memoryChunk_t* previous, memoryChunkType_t type);
+static memoryBump_t* Memory_BumpCreate(u64 size, memoryBump_t* previous, u64 origin);
 
 bool Memory_Initialize(void)
 {
@@ -45,6 +46,14 @@ bool Memory_Initialize(void)
     s_memoryState.rootChunk = Memory_ChunkBlockCreate(BASE_CHUNK_SIZE - sizeof(memoryChunk_t), NULL, MEMORY_CHUNK_TYPE_ROOT);
     if (s_memoryState.rootChunk == NULL)
         return FALSE;
+
+    s_memoryState.currentBump = Memory_BumpCreate(BASE_ARENA_SIZE, NULL, 0);
+    if (s_memoryState.currentBump == NULL)
+    {
+        free(s_memoryState.rootChunk);
+        s_memoryState.rootChunk = NULL;
+        return FALSE;
+    }
 
     return TRUE;
 }
@@ -160,6 +169,74 @@ void Memory_Free(void* block)
         next->previous = previous;
 }
 
+void* Memory_BumpAlloc(u64 size)
+{
+    size = ALIGN(size, 0x10);
+
+    if (s_memoryState.currentBump == NULL)
+        return Memory_Malloc(size);
+    memoryBump_t* bump = s_memoryState.currentBump;
+
+    if (size > bump->size - bump->taken)
+    {
+        u64 toAllocate = size > BASE_ARENA_SIZE ? size + BASE_ARENA_SIZE : BASE_ARENA_SIZE;
+        memoryBump_t* next = Memory_BumpCreate(toAllocate, bump, bump->origin + bump->size);
+        if (next == NULL)
+            return NULL;
+        bump->taken = s_memoryState.currentBump->size;
+        s_memoryState.currentBump = next;
+        bump = next;
+    }
+
+    void* chunk = (u8*)(bump + 1) + bump->taken;
+    bump->taken += size;
+    return chunk;
+}
+
+u64 Memory_BumpMarker(void)
+{
+    if (s_memoryState.currentBump == NULL)
+        return 0;
+
+    return s_memoryState.currentBump->taken + s_memoryState.currentBump->origin;
+}
+
+void Memory_BumpReset(u64 marker)
+{
+    marker = ALIGN(marker, 0x10);
+
+    if (s_memoryState.currentBump == NULL)
+        return;
+    memoryBump_t* bump = s_memoryState.currentBump;
+
+    if (marker >= bump->origin + bump->size)
+        return;
+
+    while (marker < bump->origin)
+    {
+        bump = bump->previous;
+        Memory_Free(s_memoryState.currentBump);
+        s_memoryState.currentBump = bump;
+    }
+    bump->taken = marker - bump->origin;
+}
+
+void Memory_BumpFree(void* block)
+{
+    if (block == NULL)
+        return;
+
+    memoryBump_t* bump = s_memoryState.currentBump;
+    while (bump != NULL)
+    {
+        if ((u8*)block >= (u8*)(bump + 1) && (u8*)block < (u8*)(bump + 1) + bump->size)
+            return;
+        bump = bump->previous;
+    }
+
+    Memory_Free(block);
+}
+
 memoryChunk_t* Memory_ChunkBlockCreate(u64 size, memoryChunk_t* previous, memoryChunkType_t type)
 {
     size = ALIGN(size, 0x10);
@@ -178,4 +255,21 @@ memoryChunk_t* Memory_ChunkBlockCreate(u64 size, memoryChunk_t* previous, memory
         previous->next = chunk;
     *chunk = result;
     return chunk;
+}
+
+memoryBump_t* Memory_BumpCreate(u64 size, memoryBump_t* previous, u64 origin)
+{
+    size = ALIGN(size, 0x10);
+    memoryBump_t* bump = (memoryBump_t*)Memory_Malloc(sizeof(memoryBump_t) + size);
+    if (bump == NULL)
+        return NULL;
+
+    memoryBump_t result = {
+        .size = size,
+        .origin = origin,
+        .taken = 0,
+        .previous = previous,
+    };
+    *bump = result;
+    return bump;
 }

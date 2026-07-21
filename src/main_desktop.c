@@ -2,25 +2,19 @@
 
 #include <sys/sys.h>
 #include <core/memory.h>
-#include <stdio.h>
 #include <render/render_device.h>
 
 int main(int argc, char** argv)
 {
     Memory_Initialize();
 
-    u32* a1 = (u32*)Memory_Malloc(sizeof(u32) * 16);
-    u32* a2 = (u32*)Memory_Malloc(sizeof(u32) * 48);
-    u32* a3 = (u32*)Memory_Malloc(sizeof(u32) * 24);
-    Memory_Free(a2);
-    a2 = (u32*)Memory_Malloc(sizeof(u32) * 32);
-    u32* a4 = (u32*)Memory_Malloc(sizeof(u32) * 16);
-    u32* a5 = (u32*)Memory_Malloc(sizeof(u32) * 24);
-    Memory_Free(a4);
-    Memory_Free(a5);
-    Memory_Free(a1);
-    Memory_Free(a3);
-    Memory_Free(a2);
+    u32* a1 = (u32*)Memory_BumpAlloc(sizeof(u32) * 7);
+    for (u32 i = 0; i < 7; ++i)
+        a1[i] = i;
+    u64 marker = Memory_BumpMarker();
+    u32* a2 = (u32*)Memory_BumpAlloc(sizeof(u32) * 64);
+    Memory_BumpFree(a2);
+    Memory_BumpReset(marker);
 
     /* renderDevice_t device;
     RenderDevice_CreateGL(&device);
