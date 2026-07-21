@@ -1,4 +1,3 @@
-#include "sys/sys.h"
 #define RGFW_IMPLEMENTATION
 #include "sys_rgfw.h"
 

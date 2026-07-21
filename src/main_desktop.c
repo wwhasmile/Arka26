@@ -1,4 +1,3 @@
-#include "render/render.h"
 #ifndef __EMSCRIPTEN__
 
 #include <sys/sys.h>

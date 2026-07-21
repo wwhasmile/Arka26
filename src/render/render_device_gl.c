@@ -1,4 +1,3 @@
-#include "render/render.h"
 #include "render_device.h"
 
 #include <sys/sys_rgfw.h>
@@ -11,6 +10,14 @@
 #else
 #include <ext/glad.h>
 #endif // __EMSCRIPTEN__
+
+#ifdef __EMSCRIPTEN
+static const char* RENDER_DEVICE_GLSL_VERSION_STRING = "#version 300 es\n#\n";
+static const char* RENDER_DEVICE_GLSL_FLOAT_PRECISION_STRING = "precision mediump float\n";
+#else
+static const char* RENDER_DEVICE_GLSL_VERSION_STRING = "#version 330 core\n";
+static const char* RENDER_DEVICE_GLSL_FLOAT_PRECISION_STRING = "";
+#endif
 
 typedef struct
 {
@@ -36,6 +43,14 @@ typedef struct
     GLenum type;
 } renderTextureGL_t;
 
+typedef struct
+{
+    GLuint id;
+    GLuint texture;
+    renderTextureSampler_t sampler;
+    GLint activeUniforms;
+} renderMaterialGL_t;
+
 static struct
 {
     GLuint vao;
@@ -43,7 +58,7 @@ static struct
     GLuint ebo;
     GLuint fbo;
     GLuint texture;
-    GLuint shader;
+    GLuint program;
 } s_renderStateGL;
 
 static void RenderDeviceGL_Prepare(void);
@@ -56,6 +71,7 @@ static void RenderDeviceGL_MeshSetVertexAttributes(renderMesh_t* mesh, renderVer
 static void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage);
 static void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage);
 static void RenderDeviceGL_MeshRelease(renderMesh_t* mesh);
+static renderMaterial_t* RenderDeviceGL_MaterialCreate(const char* vsh, const char* fsh);
 static void RenderDeviceGL_Clear(renderClearDescriptor_t desc);
 static void RenderDeviceGL_Swap(void);
 
