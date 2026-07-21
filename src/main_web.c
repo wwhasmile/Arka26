@@ -1,5 +1,6 @@
 #ifdef __EMSCRIPTEN__
 
+#include <core/memory.h>
 #include <sys/sys.h>
 #include <render/render_device.h>
 
@@ -10,7 +11,7 @@ static renderDevice_t device;
 static renderClearDescriptor_t clear = {
         .surface = NULL,
         .color = { 0x6496EDFF },
-        .tests = RENDER_TESTS_SCISSOR | RENDER_TESTS_VIEWPORT,
+        .tests = RENDER_TEST_SCISSOR | RENDER_TEST_VIEWPORT,
         .scissorsRect = { 0, 0, 640, 480 },
         .viewportRect = { 0, 0, 640, 480 },
     };
@@ -33,6 +34,8 @@ static void Main_Loop(void)
 
 int main(void)
 {
+    Memory_Initialize();
+
     RenderDevice_CreateGL(&device);
     device.prepare();
     if (!Sys_Initialize("Arkanoid 26", "ARKA26", 1280, 1024, 0))

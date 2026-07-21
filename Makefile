@@ -15,7 +15,7 @@ ifeq ($(PLATFORM), web)
 	CC := emcc
 	EXECUTABLE := index.html
 	CFLAGS += -pthread -std=gnu11
-	LDFLAGS += -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -pthread
+	LDFLAGS += -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -pthread -sALLOW_MEMORY_GROWTH
 else ifeq ($(UNAME), Linux)
 	CFLAGS += -std=c11
 	LDFLAGS += -lX11 -lXcursor -lGL -lGLX -lm -lXrandr

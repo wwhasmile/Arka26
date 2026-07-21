@@ -8,15 +8,7 @@ int main(int argc, char** argv)
 {
     Memory_Initialize();
 
-    u32* a1 = (u32*)Memory_BumpAlloc(sizeof(u32) * 7);
-    for (u32 i = 0; i < 7; ++i)
-        a1[i] = i;
-    u64 marker = Memory_BumpMarker();
-    u32* a2 = (u32*)Memory_BumpAlloc(sizeof(u32) * 64);
-    Memory_BumpFree(a2);
-    Memory_BumpReset(marker);
-
-    /* renderDevice_t device;
+    renderDevice_t device;
     RenderDevice_CreateGL(&device);
     device.prepare();
 
@@ -48,7 +40,7 @@ int main(int argc, char** argv)
 
         device.clear(clear);
         device.swap();
-        } */
+    }
 }
 
 #endif // __EMSCRIPTEN__
