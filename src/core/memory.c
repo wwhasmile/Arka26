@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+#define MEMORY_ALIGNMENT 0x10
 static const u64 BASE_CHUNK_SIZE = 128 * 1024 * 1024;
 static const u64 BASE_ARENA_SIZE = 96 * 1024 * 1024;
 
@@ -60,7 +61,7 @@ bool Memory_Initialize(void)
 
 void* Memory_Malloc(u64 size)
 {
-    size = ALIGN(size, 0x10);
+    size = ALIGN(size, MEMORY_ALIGNMENT);
 
     memoryChunk_t* chunk;
     if (s_memoryState.rootChunk == NULL)
@@ -87,7 +88,7 @@ void* Memory_Malloc(u64 size)
         return NULL;
 
     chunk->taken = TRUE;
-    if (chunk->size - size > sizeof(memoryChunk_t) + 0x10)
+    if (chunk->size - size > sizeof(memoryChunk_t) + MEMORY_ALIGNMENT)
     {
         memoryChunk_t* next = (memoryChunk_t*)((u8*)(chunk + 1) + size);
         memoryChunk_t result = {
@@ -171,7 +172,7 @@ void Memory_Free(void* block)
 
 void* Memory_BumpAlloc(u64 size)
 {
-    size = ALIGN(size, 0x10);
+    size = ALIGN(size, MEMORY_ALIGNMENT);
 
     if (s_memoryState.currentBump == NULL)
         return Memory_Malloc(size);
@@ -203,7 +204,7 @@ u64 Memory_BumpMarker(void)
 
 void Memory_BumpReset(u64 marker)
 {
-    marker = ALIGN(marker, 0x10);
+    marker = ALIGN(marker, MEMORY_ALIGNMENT);
 
     if (s_memoryState.currentBump == NULL)
         return;
@@ -239,7 +240,7 @@ void Memory_BumpFree(void* block)
 
 memoryChunk_t* Memory_ChunkBlockCreate(u64 size, memoryChunk_t* previous, memoryChunkType_t type)
 {
-    size = ALIGN(size, 0x10);
+    size = ALIGN(size, MEMORY_ALIGNMENT);
     memoryChunk_t* chunk = (memoryChunk_t*)malloc(size + sizeof(memoryChunk_t));
     if (chunk == NULL)
         return NULL;
@@ -259,7 +260,7 @@ memoryChunk_t* Memory_ChunkBlockCreate(u64 size, memoryChunk_t* previous, memory
 
 memoryBump_t* Memory_BumpCreate(u64 size, memoryBump_t* previous, u64 origin)
 {
-    size = ALIGN(size, 0x10);
+    size = ALIGN(size, MEMORY_ALIGNMENT);
     memoryBump_t* bump = (memoryBump_t*)Memory_Malloc(sizeof(memoryBump_t) + size);
     if (bump == NULL)
         return NULL;
