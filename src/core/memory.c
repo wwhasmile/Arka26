@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-static const u64 BASE_CHUNK_SIZE = 128 * 1024 * 1024;
+static const u64 BASE_CHUNK_SIZE = 512;
 static const u64 BASE_ARENA_SIZE = 96 * 1024 * 1024;
 
 ENUM(memoryChunkType_t, u32)
@@ -68,7 +68,8 @@ void* Memory_Malloc(u64 size)
         if (chunk->next == NULL)
         {
             u64 toAllocate = size > (BASE_CHUNK_SIZE - sizeof(memoryChunk_t)) ?
-                size : (BASE_CHUNK_SIZE - sizeof(memoryChunk_t));
+                (size + BASE_CHUNK_SIZE - sizeof(memoryChunk_t)) :
+                (BASE_CHUNK_SIZE - sizeof(memoryChunk_t));
             Memory_ChunkBlockCreate(toAllocate, chunk, MEMORY_CHUNK_TYPE_ROOT);
         }
         chunk = chunk->next;
@@ -108,7 +109,7 @@ void Memory_Free(void* block)
         return;
     }
 
-    if (!chunk->taken)
+    if ((chunk->type != MEMORY_CHUNK_TYPE_ROOT && chunk->type != MEMORY_CHUNK_TYPE_NODE) || !chunk->taken)
         return;
 
     chunk->taken = FALSE;
@@ -120,26 +121,43 @@ void Memory_Free(void* block)
         chunk->next = next->next;
         if (next->next != NULL)
             next->next->previous = chunk;
+        next = chunk->next;
     }
 
     memoryChunk_t* previous = chunk->previous;
-    if (previous != NULL)
-    {
-        if (chunk->type == MEMORY_CHUNK_TYPE_ROOT && chunk->next == NULL)
-        {
-            previous->next = NULL;
-            free(chunk);
-            return;
-        }
+    if (previous == NULL)
+        return;
 
-        if (chunk->type != MEMORY_CHUNK_TYPE_ROOT && !previous->taken)
+    if (chunk->type == MEMORY_CHUNK_TYPE_ROOT)
+    {
+        if (next == NULL || next->type != MEMORY_CHUNK_TYPE_NODE)
         {
-            previous->size += sizeof(memoryChunk_t) + chunk->size;
-            previous->next = chunk->next;
-            if (chunk->next != NULL)
-                chunk->next->previous = previous;
+            previous->next = next;
+            if (next != NULL)
+                next->previous = previous;
+            free(chunk);
         }
+        return;
     }
+
+    if (previous->taken)
+        return;
+
+    if (previous->type == MEMORY_CHUNK_TYPE_ROOT && previous->previous != NULL)
+    {
+        chunk = previous;
+        previous = chunk->previous;
+        previous->next = next;
+        if (next != NULL)
+            next->previous = previous;
+        free(chunk);
+        return;
+    }
+
+    previous->size += sizeof(memoryChunk_t) + chunk->size;
+    previous->next = next;
+    if (next != NULL)
+        next->previous = previous;
 }
 
 memoryChunk_t* Memory_ChunkBlockCreate(u64 size, memoryChunk_t* previous, memoryChunkType_t type)
