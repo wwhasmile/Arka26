@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 static const u64 BASE_CHUNK_SIZE = 128 * 1024 * 1024;
-static const u64 BASE_ARENA_SIZE = 256;
+static const u64 BASE_ARENA_SIZE = 96 * 1024 * 1024;
 
 ENUM(memoryChunkType_t, u32)
 {
