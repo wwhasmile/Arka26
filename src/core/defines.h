@@ -35,7 +35,9 @@ typedef u8 bool;
 #endif // _NDEBUG
 
 #define ENUM(name, type) \
-    typedef type name; \
-    enum name
+typedef type name; \
+enum name
+
+#define ALIGN(x, boundary) (x + boundary - 1) & ~(boundary - 1)
 
 #endif // __DEFINES_H__

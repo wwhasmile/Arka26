@@ -1,11 +1,27 @@
 #ifndef __EMSCRIPTEN__
 
 #include <sys/sys.h>
+#include <core/memory.h>
+#include <stdio.h>
 #include <render/render_device.h>
 
 int main(int argc, char** argv)
 {
-    renderDevice_t device;
+    Memory_Initialize();
+
+    u32* lol = (u32*)Memory_Malloc(sizeof(u32) * 16);
+    lol[0] = 5;
+    lol[1] = 2;
+    lol[2] = 6;
+    lol[3] = 0;
+
+    for (u32 i = 0; lol[i] != 0; ++i)
+    {
+        printf("Number: %d\n", lol[i]);
+    }
+    Memory_Free(lol);
+
+    /* renderDevice_t device;
     RenderDevice_CreateGL(&device);
     device.prepare();
 
@@ -37,7 +53,7 @@ int main(int argc, char** argv)
 
         device.clear(clear);
         device.swap();
-    }
+        } */
 }
 
 #endif // __EMSCRIPTEN__
