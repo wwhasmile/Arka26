@@ -1,9 +1,9 @@
 #include "render_device.h"
 
+#include <core/memory.h>
+
 #include <sys/sys_rgfw.h>
 
-#include <stdlib.h>
-#include <string.h>
 
 #ifdef __EMSCRIPTEN__
 #include <GLES3/gl3.h>
@@ -149,7 +149,7 @@ renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextu
             break;
     }
 
-    renderTextureGL_t* result = (renderTextureGL_t*)malloc(sizeof(renderTextureGL_t));
+    renderTextureGL_t* result = (renderTextureGL_t*)Memory_BumpAlloc(sizeof(renderTextureGL_t));
     *result = texture;
     return (renderTexture_t*)result;
 }
@@ -167,7 +167,7 @@ void RenderDeviceGL_TextureRelease(renderTexture_t* texture)
     renderTextureGL_t* tex = (renderTextureGL_t*)texture;
 
     glDeleteTextures(1, &tex->id);
-    free(tex);
+    Memory_BumpFree(tex);
 }
 
 renderMesh_t* RenderDeviceGL_MeshCreate(void)
@@ -176,7 +176,7 @@ renderMesh_t* RenderDeviceGL_MeshCreate(void)
     glGenVertexArrays(1, &result.id);
     if (result.id == 0) return NULL;
 
-    renderMeshGL_t* mesh = (renderMeshGL_t*)malloc(sizeof(renderMeshGL_t));
+    renderMeshGL_t* mesh = (renderMeshGL_t*)Memory_BumpAlloc(sizeof(renderMeshGL_t));
     *mesh = result;
     return (renderMesh_t*)mesh;
 }
@@ -361,7 +361,7 @@ void RenderDeviceGL_MeshRelease(renderMesh_t* mesh)
     if (m->id != 0)
         glDeleteVertexArrays(1, &m->id);
 
-    free(m);
+    Memory_Free(m);
 }
 
 void RenderDeviceGL_Clear(renderClearDescriptor_t desc)
