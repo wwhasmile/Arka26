@@ -1,5 +1,8 @@
 #include "memory.h"
 
+#include <core/log.h>
+#include <core/assert.h>
+
 #include <stdlib.h>
 
 #define MEMORY_ALIGNMENT 0x10
@@ -41,26 +44,31 @@ static memoryBump_t* Memory_BumpCreate(u64 size, memoryBump_t* previous, u64 ori
 
 bool Memory_Initialize(void)
 {
-    if (s_memoryState.rootChunk != NULL)
-        return FALSE;
+    ASSERT_MESSAGE(s_memoryState.rootChunk == NULL, "Attempted to initialize memory system after it was initialized");
 
     s_memoryState.rootChunk = Memory_ChunkBlockCreate(BASE_CHUNK_SIZE - sizeof(memoryChunk_t), NULL, MEMORY_CHUNK_TYPE_ROOT);
     if (s_memoryState.rootChunk == NULL)
+    {
+        LOG_FATAL("Failed to initialize primary memory arena");
         return FALSE;
+    }
 
     s_memoryState.currentBump = Memory_BumpCreate(BASE_ARENA_SIZE, NULL, 0);
     if (s_memoryState.currentBump == NULL)
     {
+        LOG_FATAL("Failed to initialize bump allocator");
         free(s_memoryState.rootChunk);
         s_memoryState.rootChunk = NULL;
         return FALSE;
     }
 
+    LOG_SUCCESS("Memory system has been initialized successfully");
     return TRUE;
 }
 
 void* Memory_Malloc(u64 size)
 {
+    ASSERT_MESSAGE(size > 0, "Attempted to allocate a memory block of size 0.");
     size = ALIGN(size, MEMORY_ALIGNMENT);
 
     memoryChunk_t* chunk;
@@ -109,8 +117,7 @@ void* Memory_Malloc(u64 size)
 
 void Memory_Free(void* block)
 {
-    if (block == NULL)
-        return;
+    ASSERT_MESSAGE(block != NULL, "Attempted to deallocate a null pointer");
 
     memoryChunk_t* chunk = (memoryChunk_t*)block - 1;
     if (chunk->type == MEMORY_CHUNK_TYPE_MANUAL)
@@ -119,8 +126,8 @@ void Memory_Free(void* block)
         return;
     }
 
-    if ((chunk->type != MEMORY_CHUNK_TYPE_ROOT && chunk->type != MEMORY_CHUNK_TYPE_NODE) || !chunk->taken)
-        return;
+    ASSERT_MESSAGE((chunk->type != MEMORY_CHUNK_TYPE_ROOT && chunk->type != MEMORY_CHUNK_TYPE_NODE) || !chunk->taken,
+        "Attempted to deallocate an invalid memory chunk");
 
     chunk->taken = FALSE;
 
@@ -172,6 +179,7 @@ void Memory_Free(void* block)
 
 void* Memory_BumpAlloc(u64 size)
 {
+    ASSERT_MESSAGE(size > 0, "Attempted to allocate 0 bytes on bump");
     size = ALIGN(size, MEMORY_ALIGNMENT);
 
     if (s_memoryState.currentBump == NULL)
@@ -210,8 +218,8 @@ void Memory_BumpReset(u64 marker)
         return;
     memoryBump_t* bump = s_memoryState.currentBump;
 
-    if (marker >= bump->origin + bump->size)
-        return;
+    ASSERT_MESSAGE(marker >= bump->origin + bump->size,
+        "Attempted to reset bump allocator to an address larger than the current one");
 
     while (marker < bump->origin)
     {
@@ -224,8 +232,7 @@ void Memory_BumpReset(u64 marker)
 
 void Memory_BumpFree(void* block)
 {
-    if (block == NULL)
-        return;
+    ASSERT_MESSAGE(block != NULL, "Attempted to deallocate a null pointer");
 
     memoryBump_t* bump = s_memoryState.currentBump;
     while (bump != NULL)
@@ -243,7 +250,10 @@ memoryChunk_t* Memory_ChunkBlockCreate(u64 size, memoryChunk_t* previous, memory
     size = ALIGN(size, MEMORY_ALIGNMENT);
     memoryChunk_t* chunk = (memoryChunk_t*)malloc(size + sizeof(memoryChunk_t));
     if (chunk == NULL)
+    {
+        LOG_ERROR("Failed to allocate a new heap chunk of size %ull bytes", size);
         return NULL;
+    }
 
     memoryChunk_t result = {
         .type = type,
@@ -263,7 +273,10 @@ memoryBump_t* Memory_BumpCreate(u64 size, memoryBump_t* previous, u64 origin)
     size = ALIGN(size, MEMORY_ALIGNMENT);
     memoryBump_t* bump = (memoryBump_t*)Memory_Malloc(sizeof(memoryBump_t) + size);
     if (bump == NULL)
+    {
+        LOG_ERROR("Failed to allocate a new bump allocator of %ull bytes", size);
         return NULL;
+    }
 
     memoryBump_t result = {
         .size = size,
