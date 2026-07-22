@@ -1,5 +1,7 @@
 #include "render_device.h"
 
+#include <core/log.h>
+#include <core/assert.h>
 #include <core/memory.h>
 
 #include <sys/sys_rgfw.h>
@@ -53,6 +55,7 @@ typedef struct
 
 static struct
 {
+    bool initialized;
     GLuint vao;
     GLuint vbo;
     GLuint ebo;
@@ -105,13 +108,19 @@ void RenderDeviceGL_Prepare(void)
 
 bool RenderDeviceGL_Initialize(void)
 {
+    ASSERT_MESSAGE(!s_renderStateGL.initialized, "Attempted to initialize OpenGL when it was already initialized");
+
     Sys_ActivateContextGL();
 
     #ifndef __EMSCRIPTEN__
     if (!gladLoadGLLoader((GLADloadproc)Sys_GetProcAddressGL))
+    {
+        LOG_FATAL("Failed to initialize OpenGL render device");
         return FALSE;
+    }
     #endif // __EMSCRIPTEN__
 
+    LOG_SUCCESS("Initialized OpenGL: %s, %s", glGetString(GL_VERSION), glGetString(GL_RENDERER));
     return TRUE;
 }
 
