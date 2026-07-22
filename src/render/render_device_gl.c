@@ -53,6 +53,13 @@ typedef struct
     GLint activeUniforms;
 } renderMaterialGL_t;
 
+typedef struct
+{
+    GLint location;
+    GLint size;
+    GLenum type;
+} renderUniformGL_t;
+
 static struct
 {
     bool initialized;
@@ -95,6 +102,7 @@ void RenderDevice_CreateGL(renderDevice_t *device)
     device->meshUploadVertices = RenderDeviceGL_MeshUploadVertices;
     device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
     device->meshRelease = RenderDeviceGL_MeshRelease;
+    device->materialCreate = RenderDeviceGL_MaterialCreate;
     device->clear = RenderDeviceGL_Clear;
     device->swap = RenderDeviceGL_Swap;
 }
@@ -381,6 +389,99 @@ void RenderDeviceGL_MeshRelease(renderMesh_t* mesh)
         glDeleteVertexArrays(1, &m->id);
 
     Memory_Free(m);
+}
+
+renderMaterial_t* RenderDeviceGL_MaterialCreate(const char* vsh, const char* fsh)
+{
+    ASSERT_MESSAGE(vsh != NULL, "Vertex shader source is null");
+    ASSERT_MESSAGE(fsh != NULL, "Fragment shader source is null");
+
+    GLchar charBuffer[512] = { 0 };
+    GLsizei charBufferStringLength;
+
+    GLuint vshId = glCreateShader(GL_VERTEX_SHADER);
+    {
+        GLint success;
+        const char* source[] = { RENDER_DEVICE_GLSL_VERSION_STRING, vsh };
+        glShaderSource(vshId, 2, source, NULL);
+        glCompileShader(vshId);
+        glGetShaderiv(vshId, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(vshId, 512, &charBufferStringLength, charBuffer);
+            glDeleteShader(vshId);
+            vshId = 0;
+            if (charBufferStringLength > 0)
+                LOG_ERROR("Failed to compile vertex shader: %s", charBuffer);
+            else
+                LOG_ERROR("Failed to compile vertex shader");
+        }
+    }
+    GLuint fshId = glCreateShader(GL_FRAGMENT_SHADER);
+    {
+        GLint success;
+        const char* source[] = { RENDER_DEVICE_GLSL_VERSION_STRING, RENDER_DEVICE_GLSL_FLOAT_PRECISION_STRING, fsh };
+        glShaderSource(fshId, 3, source, NULL);
+        glCompileShader(fshId);
+        glGetShaderiv(fshId, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(fshId, 512, &charBufferStringLength, charBuffer);
+            glDeleteShader(fshId);
+            fshId = 0;
+            if (charBufferStringLength> 0)
+                LOG_ERROR("Failed to compile fragment shader: %s", charBuffer);
+            else
+                LOG_ERROR("Failed to compile fragment shader");
+        }
+    }
+    if (vshId == 0 || fshId == 0)
+        return NULL;
+
+    GLint success;
+    GLuint id = glCreateProgram();
+    glAttachShader(id, vshId);
+    glAttachShader(id, fshId);
+    glLinkProgram(id);
+    glGetProgramiv(id, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(id, 512, &charBufferStringLength, charBuffer);
+        glDeleteProgram(id);
+        id = 0;
+        if (charBufferStringLength > 0)
+            LOG_ERROR("Failed to link shader program: %s", charBuffer);
+        else
+            LOG_ERROR("Failed to link shader program");
+    }
+    glDeleteShader(vshId);
+    glDeleteShader(fshId);
+    if (id == 0)
+        return NULL;
+
+    renderMaterialGL_t result = {
+        .id = id,
+        .texture = 0,
+        .sampler = { 0 },
+    };
+    glGetProgramiv(id, GL_ACTIVE_UNIFORMS, &result.activeUniforms);
+
+    renderMaterialGL_t* mat = (renderMaterialGL_t*)Memory_BumpAlloc(sizeof(renderMaterialGL_t) +
+        result.activeUniforms * sizeof(renderUniformGL_t));
+    *mat = result;
+
+    for (GLint i = 0; i < mat->activeUniforms; ++i)
+    {
+        renderUniformGL_t uniformResult = { 0 };
+        glGetActiveUniform(id, i, 512, &charBufferStringLength, &uniformResult.size, &uniformResult.type, charBuffer);
+        if (charBuffer[charBufferStringLength - 1] == ']')
+            charBuffer[charBufferStringLength - 3] = '\0';
+        uniformResult.location = glGetUniformLocation(id, charBuffer);
+        renderUniformGL_t* uniform = (renderUniformGL_t*)(mat + 1) + i;
+        *uniform = uniformResult;
+    }
+
+    return (renderMaterial_t*)mat;
 }
 
 void RenderDeviceGL_Clear(renderClearDescriptor_t desc)

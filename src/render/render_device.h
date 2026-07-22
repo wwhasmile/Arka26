@@ -18,6 +18,8 @@ typedef struct
     void (*meshUploadElements)(renderMesh_t*, void*, u32, u32, renderVertexDataUsage_t);
     void (*meshRelease)(renderMesh_t*);
 
+    renderMaterial_t* (*materialCreate)(const char*, const char*);
+
     void (*clear)(renderClearDescriptor_t);
 
     void (*swap)(void);
