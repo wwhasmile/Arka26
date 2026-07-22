@@ -1,17 +1,25 @@
 #define RGFW_IMPLEMENTATION
 #include "sys_rgfw.h"
 
+#include <core/assert.h>
+#include <core/log.h>
+
 #include <stdlib.h>
 
 static sysStateRGFW_t s_sysState;
 
 bool Sys_Initialize(const char *title, const char *appName, i32 width, i32 height, sysFlags_t flags)
 {
+    ASSERT_MESSAGE(!s_sysState.running, "Attempted to initialize RGFW that already was initialized");
+
     RGFW_globalHints_OpenGL_SRC.major = 3;
     RGFW_globalHints_OpenGL->minor = 3;
 
     if (RGFW_init(appName, s_sysState.rgfwInitFlags) != 0)
+    {
+        LOG_FATAL("Failed to initialize RGFW");
         return FALSE;
+    }
 
     RGFW_windowFlags rgfwFlags = RGFW_windowCenter | RGFW_windowHide | RGFW_windowHideMouse;
     rgfwFlags = RGFW_windowCenter;
@@ -27,7 +35,9 @@ bool Sys_Initialize(const char *title, const char *appName, i32 width, i32 heigh
     s_sysState.height = height;
     s_sysState.title = title;
     s_sysState.appName = appName;
+    s_sysState.running = TRUE;
 
+    LOG_SUCCESS("RGFW has been initialized successfully");
     return TRUE;
 }
 
