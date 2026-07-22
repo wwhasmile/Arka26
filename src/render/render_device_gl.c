@@ -6,7 +6,6 @@
 
 #include <sys/sys_rgfw.h>
 
-
 #ifdef __EMSCRIPTEN__
 #include <GLES3/gl3.h>
 #else
