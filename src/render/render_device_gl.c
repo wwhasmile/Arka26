@@ -165,6 +165,8 @@ renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextu
 
 void RenderDeviceGL_TextureUpload(renderTexture_t* texture, void* data)
 {
+    ASSERT_MESSAGE(texture != NULL, "Passed texture is null");
+    ASSERT_MESSAGE(data != NULL, "Passed data is null");
     renderTextureGL_t* tex = (renderTextureGL_t*)texture;
 
     RenderDeviceGL_TextureBind(tex->id);
@@ -173,6 +175,7 @@ void RenderDeviceGL_TextureUpload(renderTexture_t* texture, void* data)
 
 void RenderDeviceGL_TextureRelease(renderTexture_t* texture)
 {
+    ASSERT_MESSAGE(texture != NULL, "Passed texture is null");
     renderTextureGL_t* tex = (renderTextureGL_t*)texture;
 
     glDeleteTextures(1, &tex->id);
@@ -192,6 +195,8 @@ renderMesh_t* RenderDeviceGL_MeshCreate(void)
 
 void RenderDeviceGL_MeshSetVertexAttributes(renderMesh_t* mesh, renderVertexAttribute_t* attributes, u32 count)
 {
+    ASSERT_MESSAGE(mesh != NULL, "Passed mesh is null");
+    ASSERT_MESSAGE(attributes != NULL, "Passed attribute data is null");
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
     RenderDeviceGL_VaoBind(m->id);
 
@@ -283,6 +288,8 @@ void RenderDeviceGL_MeshSetVertexAttributes(renderMesh_t* mesh, renderVertexAttr
 
 void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage)
 {
+    ASSERT_MESSAGE(mesh != NULL, "Passed mesh is null");
+    ASSERT_MESSAGE(data != NULL, "Passed vertex data is null");
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
     RenderDeviceGL_VaoBind(m->id);
 
@@ -322,6 +329,8 @@ void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size,
 
 void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage)
 {
+    ASSERT_MESSAGE(mesh != NULL, "Passed mesh is null");
+    ASSERT_MESSAGE(data != NULL, "Passed element data is null");
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
     RenderDeviceGL_VaoBind(m->id);
 
@@ -361,6 +370,7 @@ void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size,
 
 void RenderDeviceGL_MeshRelease(renderMesh_t* mesh)
 {
+    ASSERT_MESSAGE(mesh != NULL, "Passed mesh is null");
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
 
     if (m->vbo != 0)
