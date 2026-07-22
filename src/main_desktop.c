@@ -1,11 +1,19 @@
 #ifndef __EMSCRIPTEN__
 
 #include <sys/sys.h>
+#include <core/log.h>
 #include <core/memory.h>
+#include <core/assert.h>
 #include <render/render_device.h>
 
 int main(int argc, char** argv)
 {
+    LOG_INFO("That's info");
+    LOG_DEBUG("That's debug");
+    LOG_SUCCESS("That's success");
+    LOG_WARNING("That's a warning");
+    LOG_ERROR("That's an error");
+    LOG_FATAL("That's a fatal error");
     Memory_Initialize();
 
     renderDevice_t device;

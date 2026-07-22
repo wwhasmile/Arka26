@@ -28,15 +28,13 @@ typedef u8 bool;
 #define FORCE_INLINE inline __attribute__((always_inline))
 #endif // defined(__GNUC__) || defined(__clang__)
 
-#ifdef _NDEBUG
+#ifdef NDEBUG
 #define INLINE FORCE_INLINE
 #else
 #define INLINE
-#endif // _NDEBUG
+#endif // NDEBUG
 
-#define ENUM(name, type) \
-typedef type name; \
-enum name
+#define ENUM(name, type) typedef type name; enum name
 
 #define ALIGN(x, boundary) (x + boundary - 1) & ~(boundary - 1)
 
