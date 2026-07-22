@@ -54,4 +54,6 @@ bool Sys_IsFullscreen(void);
 
 void Sys_Quit(void);
 
+void Sys_Print(const char* text, u8 color);
+
 #endif // __SYS_H__

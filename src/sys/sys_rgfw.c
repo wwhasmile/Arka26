@@ -119,6 +119,12 @@ void Sys_Quit(void)
     exit(0);
 }
 
+void Sys_Print(const char* text, u8 color)
+{
+    static const char* colors[] = { "0;37", "0;32", "0;36", "0;33", "0;31", "0;41" };
+    printf("\033[%sm%s\033[0m\n", colors[color], text);
+}
+
 void Sys_ActivateContextGL(void)
 {
     RGFW_window_makeCurrentContext_OpenGL(s_sysState.window);
