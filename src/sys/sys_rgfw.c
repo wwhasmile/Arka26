@@ -121,8 +121,12 @@ void Sys_Quit(void)
 
 void Sys_Print(const char* text, u8 color)
 {
+    #ifndef __EMSCRIPTEN__
     static const char* colors[] = { "0;37", "0;32", "0;36", "0;33", "0;31", "0;41" };
     printf("\033[%sm%s\033[0m\n", colors[color], text);
+    #else
+    printf("%s\n", text);
+    #endif
 }
 
 void Sys_ActivateContextGL(void)

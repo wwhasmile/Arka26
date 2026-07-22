@@ -3,6 +3,7 @@
 #include <core/memory.h>
 #include <sys/sys.h>
 #include <render/render_device.h>
+#include <core/log.h>
 
 #include <emscripten/emscripten.h>
 
@@ -34,6 +35,12 @@ static void Main_Loop(void)
 
 int main(void)
 {
+    LOG_INFO("That's info");
+    LOG_DEBUG("That's debug");
+    LOG_SUCCESS("That's success");
+    LOG_WARNING("That's a warning");
+    LOG_ERROR("That's an error");
+    LOG_FATAL("That's a fatal error");
     Memory_Initialize();
 
     RenderDevice_CreateGL(&device);
