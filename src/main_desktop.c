@@ -23,11 +23,37 @@ static const char* TEST_FSH = ""
     "out vec4 FragColor;\n"
     "in vec2 oTexCoord;\n"
     "in vec4 oColor;\n"
-    "uniform vec4 colors[5];\n"
     "void main()\n"
     "{\n"
-    "FragColor = colors[0];\n"
+    "FragColor = oColor;\n"
     "}\n";
+
+typedef struct
+{
+    struct
+    {
+        f32 x;
+        f32 y;
+        f32 z;
+    } position;
+    struct
+    {
+        f32 u;
+        f32 v;
+    } texCoord;
+    renderColor32_t color;
+} testVertex_t;
+
+static testVertex_t TEST_VERTICES[] = {
+    { { -0.5f, 0.5f, 0.0f, }, { 0.0f, 0.0f, }, { 0xFFFFFFFF }, },
+    { { 0.5f, 0.5f, 0.0f, }, { 1.0f, 0.0f, }, { 0xFF0000FF }, },
+    { { 0.5f, -0.5f, 0.0f, }, { 1.0f, 1.0f, }, { 0xFF00FF00 }, },
+    { { -0.5f, -0.5f, 0.0f, }, { 0.0f, 1.0f, }, { 0xFFFF0000 }, },
+};
+
+static u32 TEST_ELEMENTS[] = {
+    0, 1, 2, 2, 3, 0
+};
 
 int main(int argc, char** argv)
 {
@@ -44,6 +70,26 @@ int main(int argc, char** argv)
         return 1;
 
     renderMaterial_t* material = device.materialCreate(TEST_VSH, TEST_FSH);
+    renderMesh_t* mesh = device.meshCreate();
+    renderVertexAttribute_t attributes[] = {
+        { RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT3, FALSE },
+        { RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT2, FALSE },
+        { RENDER_VERTEX_ATTRIBUTE_TYPE_UBYTE4, TRUE },
+    };
+    device.meshSetVertexAttributes(mesh, attributes, sizeof(attributes) / sizeof(renderVertexAttribute_t));
+    device.meshUploadVertices(mesh, TEST_VERTICES, sizeof(TEST_VERTICES), 0, RENDER_VERTEX_DATA_USAGE_STATIC);
+    device.meshUploadElements(mesh, TEST_ELEMENTS, sizeof(TEST_ELEMENTS), 0, RENDER_VERTEX_DATA_USAGE_STATIC);
+
+    renderDrawDescriptor_t draw = {
+        .surface = NULL,
+        .mesh = mesh,
+        .material = material,
+        // .tests = RENDER_TEST_SCISSOR | RENDER_TEST_VIEWPORT,
+        0,
+        .scissorsRect = { 0, 0, 640, 480 },
+        .viewportRect = { 0, 0, 640, 480 },
+        .count = 6,
+    };
 
     renderClearDescriptor_t clear = {
         .surface = NULL,
@@ -65,7 +111,8 @@ int main(int argc, char** argv)
             }
         }
 
-        device.clear(clear);
+        device.clear(&clear);
+        device.draw(&draw);
         device.swap();
     }
 }

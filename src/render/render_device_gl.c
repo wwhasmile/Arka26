@@ -47,8 +47,8 @@ typedef struct
 typedef struct
 {
     GLuint id;
-    GLuint textures[RENDER_MAX_TEXTURES];
-    renderTextureSampler_t samplers[RENDER_MAX_TEXTURES];
+    GLuint textures[RENDER_MAX_TEXTURES ];
+    renderTextureSampler_t samplers[RENDER_MAX_TEXTURES ];
     GLint activeUniforms;
 } renderMaterialGL_t;
 
@@ -66,8 +66,7 @@ static struct
     GLuint vbo;
     GLuint ebo;
     GLuint fbo;
-    GLuint textures[RENDER_MAX_TEXTURES];
-    renderTextureSampler_t samplers[RENDER_MAX_TEXTURES];
+    GLuint textures[RENDER_MAX_TEXTURES ];
     GLuint program;
 } s_renderStateGL;
 
@@ -87,14 +86,14 @@ static void RenderDeviceGL_MaterialSetTextures(renderMaterial_t* material, u32 s
 static void RenderDeviceGL_MaterialSetSamplers(renderMaterial_t* material, u32 slot,
         renderTextureSampler_t* samplers, u32 count);
 static void RenderDeviceGL_MaterialRelease(renderMaterial_t* material);
-static void RenderDeviceGL_Clear(renderClearDescriptor_t desc);
+static void RenderDeviceGL_Draw(const renderDrawDescriptor_t* desc);
+static void RenderDeviceGL_Clear(const renderClearDescriptor_t* desc);
 static void RenderDeviceGL_Swap(void);
 
-INLINE static void RenderDeviceGL_TextureBind(u8 slot, GLuint id);
-INLINE static void RenderDeviceGL_SamplerBind(u8 slot, renderTextureSampler_t sampler);
+INLINE static void RenderDeviceGL_TextureBind(u32 slot, GLuint id);
+INLINE static void RenderDeviceGL_SamplerBind(u32 slot, renderTextureSampler_t sampler);
 INLINE static void RenderDeviceGL_VaoBind(GLuint id);
-INLINE static void RenderDeviceGL_VboBind(GLuint id);
-INLINE static void RenderDeviceGL_EboBind(GLuint id);
+INLINE static void RenderDeviceGL_BufferBind(GLuint vbo, GLuint ebo);
 INLINE static void RenderDeviceGL_ProgramBind(GLuint id);
 
 void RenderDevice_CreateGL(renderDevice_t *device)
@@ -114,6 +113,7 @@ void RenderDevice_CreateGL(renderDevice_t *device)
     device->materialSetTextures = RenderDeviceGL_MaterialSetTextures;
     device->materialSetSamplers = RenderDeviceGL_MaterialSetSamplers;
     device->materialRelease = RenderDeviceGL_MaterialRelease;
+    device->draw = RenderDeviceGL_Draw;
     device->clear = RenderDeviceGL_Clear;
     device->swap = RenderDeviceGL_Swap;
 }
@@ -145,7 +145,7 @@ bool RenderDeviceGL_Initialize(void)
 
 renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextureFormat_t format)
 {
-    ASSERT_MESSAGE(format < RENDER_TEXTURE_FORMAT_MAX, "Invalid texture format");
+    ASSERT_MESSAGE(format < RENDER_TEXTURE_FORMAT_ENUM_MAX, "Invalid texture format");
 
     renderTextureGL_t texture = {
         .width = width,
@@ -236,7 +236,7 @@ void RenderDeviceGL_MeshSetVertexAttributes(renderMesh_t* mesh, renderVertexAttr
     u32 stride = 0;
     for (u32 i = 0; i < count; ++i)
     {
-        ASSERT_MESSAGE(attributes[i].type < RENDER_VERTEX_ATTRIBUTE_TYPE_MAX, "Invalid vertex attribute type");
+        ASSERT_MESSAGE(attributes[i].type < RENDER_VERTEX_ATTRIBUTE_TYPE_ENUM_MAX, "Invalid vertex attribute type");
         switch (attributes[i].type)
         {
             case RENDER_VERTEX_ATTRIBUTE_TYPE_UBYTE4:
@@ -312,7 +312,7 @@ void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size,
 {
     ASSERT_MESSAGE(mesh != NULL, "Passed mesh is null");
     ASSERT_MESSAGE(data != NULL, "Passed vertex data is null");
-    ASSERT_MESSAGE(usage < RENDER_VERTEX_DATA_USAGE_MAX, "Invalid vertex data usage");
+    ASSERT_MESSAGE(usage < RENDER_VERTEX_DATA_USAGE_ENUM_MAX, "Invalid vertex data usage");
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
     RenderDeviceGL_VaoBind(m->id);
 
@@ -354,7 +354,7 @@ void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size,
 {
     ASSERT_MESSAGE(mesh != NULL, "Passed mesh is null");
     ASSERT_MESSAGE(data != NULL, "Passed element data is null");
-    ASSERT_MESSAGE(usage >= 0 && usage < RENDER_VERTEX_DATA_USAGE_MAX, "Invalid eielemt data usage");
+    ASSERT_MESSAGE(usage >= 0 && usage < RENDER_VERTEX_DATA_USAGE_ENUM_MAX, "Invalid eielemt data usage");
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
     RenderDeviceGL_VaoBind(m->id);
 
@@ -589,7 +589,7 @@ void RenderDeviceGL_MaterialSetUniform(renderMaterial_t* material, u32 id, void*
 void RenderDeviceGL_MaterialSetTextures(renderMaterial_t* material, u32 slot, renderTexture_t** textures, u32 count)
 {
     ASSERT_MESSAGE(material != NULL, "Material is null");
-    ASSERT_MESSAGE(slot < RENDER_MAX_TEXTURES, "Invalid texture slot");
+    ASSERT_MESSAGE(slot < RENDER_MAX_TEXTURES , "Invalid texture slot");
     ASSERT_MESSAGE(textures != NULL, "Textures is null");
     ASSERT_MESSAGE(count <= RENDER_MAX_TEXTURES - slot, "Too many textures to set");
     renderMaterialGL_t* it = (renderMaterialGL_t*)material;
@@ -618,9 +618,9 @@ void RenderDeviceGL_MaterialSetSamplers(renderMaterial_t* material, u32 slot,
 
     for (u32 i = 0; i < count; ++i)
     {
-        ASSERT_MESSAGE(samplers[i].filter < RENDER_TEXTURE_FILTER_MAX, "Invalid texture filter");
-        ASSERT_MESSAGE(samplers[i].horizontalWrap < RENDER_TEXTURE_WRAP_MAX, "Invalid horizontal texture wrap");
-        ASSERT_MESSAGE(samplers[i].verticalWrap < RENDER_TEXTURE_WRAP_MAX, "Invalid vertical texture wrap");
+        ASSERT_MESSAGE(samplers[i].filter < RENDER_TEXTURE_FILTER_ENUM_MAX, "Invalid texture filter");
+        ASSERT_MESSAGE(samplers[i].horizontalWrap < RENDER_TEXTURE_WRAP_ENUM_MAX, "Invalid horizontal texture wrap");
+        ASSERT_MESSAGE(samplers[i].verticalWrap < RENDER_TEXTURE_WRAP_ENUM_MAX, "Invalid vertical texture wrap");
 
         it->samplers[slot + i] = samplers[i];
     }
@@ -635,16 +635,83 @@ void RenderDeviceGL_MaterialRelease(renderMaterial_t* material)
     Memory_BumpFree(it);
 }
 
-void RenderDeviceGL_Clear(renderClearDescriptor_t desc)
+void RenderDeviceGL_Draw(const renderDrawDescriptor_t* desc)
 {
-    if (desc.tests & RENDER_TEST_SCISSOR)
+    ASSERT_MESSAGE(desc->mesh != NULL, "There is no mesh to draw");
+    ASSERT_MESSAGE(desc->material != NULL, "There is no material to use");
+    ASSERT_MESSAGE(desc->blendOpColor < RENDER_BLEND_OP_ENUM_MAX, "Invalid blend operation for color");
+    ASSERT_MESSAGE(desc->blendOpAlpha < RENDER_BLEND_OP_ENUM_MAX, "Invalid blend operation for alpha");
+    ASSERT_MESSAGE(desc->blendFuncSrcColor < RENDER_BLEND_OP_ENUM_MAX, "Invalid blend function for source color");
+    ASSERT_MESSAGE(desc->blendFuncDstColor < RENDER_BLEND_FUNC_ENUM_MAX, "Invalid blend function for destination color");
+    ASSERT_MESSAGE(desc->blendFuncSrcAlpha < RENDER_BLEND_FUNC_ENUM_MAX, "Invalid blend function for source alpha");
+    ASSERT_MESSAGE(desc->blendFuncDstAlpha < RENDER_BLEND_OP_ENUM_MAX, "Invalid blend function for destination alpha");
+    ASSERT_MESSAGE(desc->depthCompare < RENDER_DEPTH_COMPARE_ENUM_MAX, "Invalid depth comparison operator");
+    ASSERT_MESSAGE(desc->count > 0, "Count of elements to be rendered must be greater");
+
+    if (desc->tests & RENDER_TEST_BLEND)
+    {
+        static const GLenum opTable[] = { GL_FUNC_ADD, GL_FUNC_SUBTRACT, GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX, };
+        static const GLenum funcTable[] = {
+            GL_ZERO,
+            GL_ONE,
+            GL_SRC_COLOR,
+            GL_ONE_MINUS_SRC_COLOR,
+            GL_DST_COLOR,
+            GL_ONE_MINUS_DST_COLOR,
+            GL_SRC_ALPHA,
+            GL_ONE_MINUS_SRC_ALPHA,
+            GL_DST_ALPHA,
+            GL_ONE_MINUS_DST_ALPHA,
+        };
+        glEnable(GL_BLEND);
+        glBlendEquationSeparate(opTable[desc->blendOpColor], opTable[desc->blendOpAlpha]);
+        glBlendFuncSeparate(funcTable[desc->blendFuncSrcColor], funcTable[desc->blendFuncDstColor],
+            funcTable[desc->blendFuncSrcAlpha], funcTable[desc->blendFuncDstAlpha]);
+    }
+    else
+        glDisable(GL_BLEND);
+    if (desc->tests & RENDER_TEST_DEPTH)
+    {
+        static const GLenum funcTable[] = { GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER, GL_NOTEQUAL, };
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(funcTable[desc->depthCompare]);
+    }
+    if (desc->tests & RENDER_TEST_SCISSOR)
     {
         glEnable(GL_SCISSOR_TEST);
-        glScissor(desc.scissorsRect.x, desc.scissorsRect.y, desc.scissorsRect.width, desc.scissorsRect.height);
+        glScissor(desc->scissorsRect.x, desc->scissorsRect.y, desc->scissorsRect.width, desc->scissorsRect.height);
     }
-    if (desc.tests & RENDER_TEST_VIEWPORT)
-        glViewport(desc.viewportRect.x, desc.viewportRect.y, desc.viewportRect.width, desc.viewportRect.height);
-    renderColor_t converted = Render_ColorFrom32(desc.color);
+    else
+        glDisable(GL_SCISSOR_TEST);
+
+    renderMeshGL_t* mesh = (renderMeshGL_t*)desc->mesh;
+    RenderDeviceGL_VaoBind(mesh->id);
+    RenderDeviceGL_BufferBind(mesh->vbo, mesh->ebo);
+
+    renderMaterialGL_t* material = (renderMaterialGL_t*)desc->material;
+    RenderDeviceGL_ProgramBind(material->id);
+
+    for (u32 i = 0; i < RENDER_MAX_TEXTURES; ++i)
+    {
+        RenderDeviceGL_TextureBind(i, material->textures[i]);
+        RenderDeviceGL_SamplerBind(i, material->samplers[i]);
+    }
+
+    glDrawElements(GL_TRIANGLES, desc->count, GL_UNSIGNED_INT, (void*)(desc->start * sizeof(GLuint)));
+}
+
+void RenderDeviceGL_Clear(const renderClearDescriptor_t* desc)
+{
+    if (desc->tests & RENDER_TEST_SCISSOR)
+    {
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(desc->scissorsRect.x, desc->scissorsRect.y, desc->scissorsRect.width, desc->scissorsRect.height);
+    }
+    else
+        glDisable(GL_SCISSOR_TEST);
+    if (desc->tests & RENDER_TEST_VIEWPORT)
+        glViewport(desc->viewportRect.x, desc->viewportRect.y, desc->viewportRect.width, desc->viewportRect.height);
+    renderColor_t converted = Render_ColorFrom32(desc->color);
     glClearColor(converted.r, converted.g, converted.b, converted.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
@@ -654,7 +721,7 @@ void RenderDeviceGL_Swap(void)
     Sys_SwapGL();
 }
 
-void RenderDeviceGL_TextureBind(u8 slot, GLuint id)
+void RenderDeviceGL_TextureBind(u32 slot, GLuint id)
 {
     if (s_renderStateGL.textures[slot] != id)
     {
@@ -664,28 +731,15 @@ void RenderDeviceGL_TextureBind(u8 slot, GLuint id)
     }
 }
 
-void RenderDeviceGL_SamplerBind(u8 slot, renderTextureSampler_t sampler)
+void RenderDeviceGL_SamplerBind(u32 slot, renderTextureSampler_t sampler)
 {
     static const GLint filterTable[] = { GL_NEAREST, GL_LINEAR, };
     static const GLint wrapTable[] = { GL_CLAMP_TO_EDGE, GL_REPEAT, GL_MIRRORED_REPEAT, };
-
     glActiveTexture(GL_TEXTURE0 + slot);
-    if (s_renderStateGL.samplers[slot].filter != sampler.filter)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterTable[sampler.filter]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterTable[sampler.filter]);
-        s_renderStateGL.samplers[slot].filter = sampler.filter;
-    }
-    if (s_renderStateGL.samplers[slot].horizontalWrap != sampler.horizontalWrap)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapTable[sampler.horizontalWrap]);
-        s_renderStateGL.samplers[slot].horizontalWrap = sampler.horizontalWrap;
-    }
-    if (s_renderStateGL.samplers[slot].verticalWrap != sampler.verticalWrap)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapTable[sampler.verticalWrap]);
-        s_renderStateGL.samplers[slot].verticalWrap = sampler.verticalWrap;
-    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterTable[sampler.filter]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterTable[sampler.filter]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapTable[sampler.horizontalWrap]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapTable[sampler.verticalWrap]);
 }
 
 void RenderDeviceGL_VaoBind(GLuint id)
@@ -697,21 +751,17 @@ void RenderDeviceGL_VaoBind(GLuint id)
     }
 }
 
-void RenderDeviceGL_VboBind(GLuint id)
+void RenderDeviceGL_BufferBind(GLuint vbo, GLuint ebo)
 {
-    if (s_renderStateGL.vbo != id)
+    if (s_renderStateGL.vbo != vbo)
     {
-        glBindBuffer(GL_ARRAY_BUFFER, id);
-        s_renderStateGL.vbo = id;
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        s_renderStateGL.vbo = vbo;
     }
-}
-
-void RenderDeviceGL_EboBind(GLuint id)
-{
-    if (s_renderStateGL.ebo != id)
+    if (s_renderStateGL.ebo != ebo)
     {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-        s_renderStateGL.ebo = id;
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        s_renderStateGL.ebo = ebo;
     }
 }
 

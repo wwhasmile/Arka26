@@ -28,7 +28,7 @@ static void Main_Loop(void)
             break;
         }
 
-        device.clear(clear);
+        device.clear(&clear);
         device.swap();
     }
 }

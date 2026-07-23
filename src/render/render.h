@@ -41,14 +41,14 @@ ENUM(renderTextureFormat_t, u8)
     RENDER_TEXTURE_FORMAT_RGB,
     RENDER_TEXTURE_FORMAT_RED,
     RENDER_TEXTURE_FORMAT_DEPTH_STENCIL,
-    RENDER_TEXTURE_FORMAT_MAX,
+    RENDER_TEXTURE_FORMAT_ENUM_MAX,
 };
 
 ENUM(renderTextureFilter_t, u8)
 {
     RENDER_TEXTURE_FILTER_NEAREST,
     RENDER_TEXTURE_FILTER_LINEAR,
-    RENDER_TEXTURE_FILTER_MAX,
+    RENDER_TEXTURE_FILTER_ENUM_MAX,
 };
 
 ENUM(renderTextureWrap_t, u8)
@@ -56,7 +56,7 @@ ENUM(renderTextureWrap_t, u8)
     RENDER_TEXTURE_WRAP_CLAMP,
     RENDER_TEXTURE_WRAP_REPEAT,
     RENDER_TEXTURE_WRAP_MIRROR,
-    RENDER_TEXTURE_WRAP_MAX
+    RENDER_TEXTURE_WRAP_ENUM_MAX
 };
 
 typedef struct
@@ -75,7 +75,7 @@ ENUM(renderVertexAttributeType_t, u8)
     RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT2,
     RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT3,
     RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT4,
-    RENDER_VERTEX_ATTRIBUTE_TYPE_MAX,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_ENUM_MAX,
 };
 
 typedef struct
@@ -88,14 +88,51 @@ ENUM(renderVertexDataUsage_t, u8)
 {
     RENDER_VERTEX_DATA_USAGE_DYNAMIC,
     RENDER_VERTEX_DATA_USAGE_STATIC,
-    RENDER_VERTEX_DATA_USAGE_MAX,
+    RENDER_VERTEX_DATA_USAGE_ENUM_MAX,
 };
 
 ENUM(renderTests_t, u8)
 {
     RENDER_TEST_BLEND = 1 << 0,
-    RENDER_TEST_SCISSOR = 1 << 1,
-    RENDER_TEST_VIEWPORT = 1 << 2,
+    RENDER_TEST_DEPTH = 1 << 1,
+    RENDER_TEST_SCISSOR = 1 << 2,
+    RENDER_TEST_VIEWPORT = 1 << 3,
+};
+
+ENUM(renderDepthCompare_t, u8)
+{
+    RENDER_DEPTH_COMPARE_L,
+    RENDER_DEPTH_COMPARE_LE,
+    RENDER_DEPTH_COMPARE_E,
+    RENDER_DEPTH_COMPARE_GE,
+    RENDER_DEPTH_COMPARE_G,
+    RENDER_DEPTH_COMPARE_NEQ,
+    RENDER_DEPTH_COMPARE_ENUM_MAX,
+};
+
+ENUM(renderBlendOp_t, u8)
+{
+    RENDER_BLEND_OP_ADD,
+    RENDER_BLEND_OP_SUBTRACT,
+    RENDER_BLEND_OP_REVERSE_SUBTRACT,
+    RENDER_BLEND_OP_MIN,
+    RENDER_BLEND_OP_MAX,
+    RENDER_BLEND_OP_ENUM_MAX,
+};
+
+ENUM(renderBlendFunc_t, u8)
+{
+    RENDER_BLEND_FUNC_ZERO,
+    RENDER_BLEND_FUNC_ONE,
+    RENDER_BLEND_FUNC_SRC_COLOR,
+    RENDER_BLEND_FUNC_INV_SRC_COLOR,
+    RENDER_BLEND_FUNC_DST_COLOR,
+    RENDER_BLEND_FUNC_INV_DST_COLOR,
+    RENDER_BLEND_FUNC_SRC_ALPHA,
+    RENDER_BLEND_FUNC_INV_SRC_ALPHA,
+    RENDER_BLEND_FUNC_DST_ALPHA,
+    RENDER_BLEND_FUNC_INV_DST_ALPHA,
+    RENDER_BLEND_FUNC_ENUM_MAX,
 };
 
 typedef struct
@@ -112,6 +149,13 @@ typedef struct
     renderMesh_t* mesh;
     renderMaterial_t* material;
     renderTests_t tests;
+    renderBlendOp_t blendOpColor;
+    renderBlendOp_t blendOpAlpha;
+    renderBlendFunc_t blendFuncSrcColor;
+    renderBlendFunc_t blendFuncDstColor;
+    renderBlendFunc_t blendFuncSrcAlpha;
+    renderBlendFunc_t blendFuncDstAlpha;
+    renderDepthCompare_t depthCompare;
     renderRect_t scissorsRect;
     renderRect_t viewportRect;
     u32 start;

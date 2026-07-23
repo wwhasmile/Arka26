@@ -24,7 +24,8 @@ typedef struct
     void (*materialSetSamplers)(renderMaterial_t*, u32, renderTextureSampler_t*, u32);
     void (*materialRelease)(renderMaterial_t*);
 
-    void (*clear)(renderClearDescriptor_t);
+    void (*draw)(const renderDrawDescriptor_t*);
+    void (*clear)(const renderClearDescriptor_t*);
 
     void (*swap)(void);
 } renderDevice_t;
