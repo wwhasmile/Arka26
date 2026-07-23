@@ -3,6 +3,8 @@
 
 #include <core/defines.h>
 
+#define RENDER_MAX_TEXTURES 16
+
 typedef void renderTexture_t;
 typedef void renderMesh_t;
 typedef void renderMaterial_t;
@@ -39,19 +41,22 @@ ENUM(renderTextureFormat_t, u8)
     RENDER_TEXTURE_FORMAT_RGB,
     RENDER_TEXTURE_FORMAT_RED,
     RENDER_TEXTURE_FORMAT_DEPTH_STENCIL,
+    RENDER_TEXTURE_FORMAT_MAX,
 };
 
 ENUM(renderTextureFilter_t, u8)
 {
     RENDER_TEXTURE_FILTER_NEAREST,
     RENDER_TEXTURE_FILTER_LINEAR,
+    RENDER_TEXTURE_FILTER_MAX,
 };
 
 ENUM(renderTextureWrap_t, u8)
 {
     RENDER_TEXTURE_WRAP_CLAMP,
     RENDER_TEXTURE_WRAP_REPEAT,
-    RENDER_TEXTURE_WRAP_MIRROR
+    RENDER_TEXTURE_WRAP_MIRROR,
+    RENDER_TEXTURE_WRAP_MAX
 };
 
 typedef struct
@@ -59,6 +64,7 @@ typedef struct
     renderTextureFilter_t filter;
     renderTextureWrap_t horizontalWrap;
     renderTextureWrap_t verticalWrap;
+    u8 _padding0;
 } renderTextureSampler_t;
 
 ENUM(renderVertexAttributeType_t, u8)
@@ -69,6 +75,7 @@ ENUM(renderVertexAttributeType_t, u8)
     RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT2,
     RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT3,
     RENDER_VERTEX_ATTRIBUTE_TYPE_FLOAT4,
+    RENDER_VERTEX_ATTRIBUTE_TYPE_MAX,
 };
 
 typedef struct
@@ -81,6 +88,7 @@ ENUM(renderVertexDataUsage_t, u8)
 {
     RENDER_VERTEX_DATA_USAGE_DYNAMIC,
     RENDER_VERTEX_DATA_USAGE_STATIC,
+    RENDER_VERTEX_DATA_USAGE_MAX,
 };
 
 ENUM(renderTests_t, u8)

@@ -12,13 +12,13 @@
 #include <ext/glad.h>
 #endif // __EMSCRIPTEN__
 
-#ifdef __EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 static const char* RENDER_DEVICE_GLSL_VERSION_STRING = "#version 300 es\n#\n";
 static const char* RENDER_DEVICE_GLSL_FLOAT_PRECISION_STRING = "precision mediump float\n";
 #else
 static const char* RENDER_DEVICE_GLSL_VERSION_STRING = "#version 330 core\n";
 static const char* RENDER_DEVICE_GLSL_FLOAT_PRECISION_STRING = "";
-#endif
+#endif // __EMSCRIPTEN__
 
 typedef struct
 {
@@ -47,8 +47,8 @@ typedef struct
 typedef struct
 {
     GLuint id;
-    GLuint texture;
-    renderTextureSampler_t sampler;
+    GLuint textures[RENDER_MAX_TEXTURES];
+    renderTextureSampler_t samplers[RENDER_MAX_TEXTURES];
     GLint activeUniforms;
 } renderMaterialGL_t;
 
@@ -66,7 +66,8 @@ static struct
     GLuint vbo;
     GLuint ebo;
     GLuint fbo;
-    GLuint texture;
+    GLuint textures[RENDER_MAX_TEXTURES];
+    renderTextureSampler_t samplers[RENDER_MAX_TEXTURES];
     GLuint program;
 } s_renderStateGL;
 
@@ -81,13 +82,20 @@ static void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u3
 static void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size, u32 dest, renderVertexDataUsage_t usage);
 static void RenderDeviceGL_MeshRelease(renderMesh_t* mesh);
 static renderMaterial_t* RenderDeviceGL_MaterialCreate(const char* vsh, const char* fsh);
+static void RenderDeviceGL_MaterialSetUniform(renderMaterial_t* material, u32 id, void* data, u32 count);
+static void RenderDeviceGL_MaterialSetTextures(renderMaterial_t* material, u32 slot, renderTexture_t** textures, u32 count);
+static void RenderDeviceGL_MaterialSetSamplers(renderMaterial_t* material, u32 slot,
+        renderTextureSampler_t* samplers, u32 count);
+static void RenderDeviceGL_MaterialRelease(renderMaterial_t* material);
 static void RenderDeviceGL_Clear(renderClearDescriptor_t desc);
 static void RenderDeviceGL_Swap(void);
 
-INLINE static void RenderDeviceGL_TextureBind(GLuint id);
+INLINE static void RenderDeviceGL_TextureBind(u8 slot, GLuint id);
+INLINE static void RenderDeviceGL_SamplerBind(u8 slot, renderTextureSampler_t sampler);
 INLINE static void RenderDeviceGL_VaoBind(GLuint id);
 INLINE static void RenderDeviceGL_VboBind(GLuint id);
 INLINE static void RenderDeviceGL_EboBind(GLuint id);
+INLINE static void RenderDeviceGL_ProgramBind(GLuint id);
 
 void RenderDevice_CreateGL(renderDevice_t *device)
 {
@@ -102,6 +110,10 @@ void RenderDevice_CreateGL(renderDevice_t *device)
     device->meshUploadElements = RenderDeviceGL_MeshUploadElements;
     device->meshRelease = RenderDeviceGL_MeshRelease;
     device->materialCreate = RenderDeviceGL_MaterialCreate;
+    device->materialSetUniform = RenderDeviceGL_MaterialSetUniform;
+    device->materialSetTextures = RenderDeviceGL_MaterialSetTextures;
+    device->materialSetSamplers = RenderDeviceGL_MaterialSetSamplers;
+    device->materialRelease = RenderDeviceGL_MaterialRelease;
     device->clear = RenderDeviceGL_Clear;
     device->swap = RenderDeviceGL_Swap;
 }
@@ -133,6 +145,8 @@ bool RenderDeviceGL_Initialize(void)
 
 renderTexture_t* RenderDeviceGL_TextureCreate(u32 width, u32 height, renderTextureFormat_t format)
 {
+    ASSERT_MESSAGE(format < RENDER_TEXTURE_FORMAT_MAX, "Invalid texture format");
+
     renderTextureGL_t texture = {
         .width = width,
         .height = height,
@@ -176,7 +190,7 @@ void RenderDeviceGL_TextureUpload(renderTexture_t* texture, void* data)
     ASSERT_MESSAGE(data != NULL, "Passed data is null");
     renderTextureGL_t* tex = (renderTextureGL_t*)texture;
 
-    RenderDeviceGL_TextureBind(tex->id);
+    RenderDeviceGL_TextureBind(0, tex->id);
     glTexImage2D(GL_TEXTURE_2D, 0, tex->internalFormat, tex->width, tex->height, 0, tex->format, tex->type, data);
 }
 
@@ -222,6 +236,7 @@ void RenderDeviceGL_MeshSetVertexAttributes(renderMesh_t* mesh, renderVertexAttr
     u32 stride = 0;
     for (u32 i = 0; i < count; ++i)
     {
+        ASSERT_MESSAGE(attributes[i].type < RENDER_VERTEX_ATTRIBUTE_TYPE_MAX, "Invalid vertex attribute type");
         switch (attributes[i].type)
         {
             case RENDER_VERTEX_ATTRIBUTE_TYPE_UBYTE4:
@@ -297,6 +312,7 @@ void RenderDeviceGL_MeshUploadVertices(renderMesh_t* mesh, void* data, u32 size,
 {
     ASSERT_MESSAGE(mesh != NULL, "Passed mesh is null");
     ASSERT_MESSAGE(data != NULL, "Passed vertex data is null");
+    ASSERT_MESSAGE(usage < RENDER_VERTEX_DATA_USAGE_MAX, "Invalid vertex data usage");
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
     RenderDeviceGL_VaoBind(m->id);
 
@@ -338,6 +354,7 @@ void RenderDeviceGL_MeshUploadElements(renderMesh_t* mesh, void* data, u32 size,
 {
     ASSERT_MESSAGE(mesh != NULL, "Passed mesh is null");
     ASSERT_MESSAGE(data != NULL, "Passed element data is null");
+    ASSERT_MESSAGE(usage >= 0 && usage < RENDER_VERTEX_DATA_USAGE_MAX, "Invalid eielemt data usage");
     renderMeshGL_t* m = (renderMeshGL_t*)mesh;
     RenderDeviceGL_VaoBind(m->id);
 
@@ -460,8 +477,6 @@ renderMaterial_t* RenderDeviceGL_MaterialCreate(const char* vsh, const char* fsh
 
     renderMaterialGL_t result = {
         .id = id,
-        .texture = 0,
-        .sampler = { 0 },
     };
     glGetProgramiv(id, GL_ACTIVE_UNIFORMS, &result.activeUniforms);
 
@@ -483,6 +498,143 @@ renderMaterial_t* RenderDeviceGL_MaterialCreate(const char* vsh, const char* fsh
     return (renderMaterial_t*)mat;
 }
 
+void RenderDeviceGL_MaterialSetUniform(renderMaterial_t* material, u32 id, void* data, u32 count)
+{
+    ASSERT_MESSAGE(material != NULL, "Material is null");
+    ASSERT_MESSAGE(data != NULL, "Uniform data is null");
+    renderMaterialGL_t* it = (renderMaterialGL_t*)material;
+
+    ASSERT_MESSAGE(id < (u32)it->activeUniforms, "Attempted to set a non-existent uniform");
+
+    renderUniformGL_t* uniform = (renderUniformGL_t*)(it + 1) + id;
+    ASSERT_MESSAGE(count < (u32)uniform->size, "The uniform is not large enough for the count");
+
+    RenderDeviceGL_ProgramBind(it->id);
+    switch (uniform->type)
+    {
+        case GL_FLOAT:
+            glUniform1fv(uniform->location, count, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_VEC2:
+            glUniform2fv(uniform->location, count, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_VEC3:
+            glUniform3fv(uniform->location, count, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_VEC4:
+            glUniform4fv(uniform->location, count, (const GLfloat*)data);
+            break;
+        case GL_INT:
+        case GL_BOOL:
+        case GL_SAMPLER_2D:
+            glUniform1iv(uniform->location, count, (const GLint*)data);
+            break;
+        case GL_INT_VEC2:
+        case GL_BOOL_VEC2:
+            glUniform2iv(uniform->location, count, (const GLint*)data);
+            break;
+        case GL_INT_VEC3:
+        case GL_BOOL_VEC3:
+            glUniform3iv(uniform->location, count, (const GLint*)data);
+            break;
+        case GL_INT_VEC4:
+        case GL_BOOL_VEC4:
+            glUniform4iv(uniform->location, count, (const GLint*)data);
+            break;
+        case GL_UNSIGNED_INT:
+            glUniform1uiv(uniform->location, count, (const GLuint*)data);
+            break;
+        case GL_UNSIGNED_INT_VEC2:
+            glUniform2uiv(uniform->location, count, (const GLuint*)data);
+            break;
+        case GL_UNSIGNED_INT_VEC3:
+            glUniform3uiv(uniform->location, count, (const GLuint*)data);
+            break;
+        case GL_UNSIGNED_INT_VEC4:
+            glUniform4uiv(uniform->location, count, (const GLuint*)data);
+            break;
+        case GL_FLOAT_MAT2:
+            glUniformMatrix2fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_MAT3:
+            glUniformMatrix3fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_MAT4:
+            glUniformMatrix4fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_MAT2x3:
+            glUniformMatrix2x3fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_MAT2x4:
+            glUniformMatrix2x4fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_MAT3x2:
+            glUniformMatrix3x2fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_MAT3x4:
+            glUniformMatrix3x4fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_MAT4x2:
+            glUniformMatrix4x2fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        case GL_FLOAT_MAT4x3:
+            glUniformMatrix4x3fv(uniform->location, count, GL_FALSE, (const GLfloat*)data);
+            break;
+        default:
+            LOG_ERROR("Unsupported uniform type");
+            return;
+    }
+}
+
+void RenderDeviceGL_MaterialSetTextures(renderMaterial_t* material, u32 slot, renderTexture_t** textures, u32 count)
+{
+    ASSERT_MESSAGE(material != NULL, "Material is null");
+    ASSERT_MESSAGE(slot < RENDER_MAX_TEXTURES, "Invalid texture slot");
+    ASSERT_MESSAGE(textures != NULL, "Textures is null");
+    ASSERT_MESSAGE(count <= RENDER_MAX_TEXTURES - slot, "Too many textures to set");
+    renderMaterialGL_t* it = (renderMaterialGL_t*)material;
+
+    for (u32 i = 0; i < count; ++i)
+    {
+        if (textures[i] == NULL)
+        {
+            it->textures[slot + i] = 0;
+            continue;
+        }
+
+        renderTextureGL_t* tex = (renderTextureGL_t*)textures[i];
+        it->textures[slot + i] = tex->id;
+    }
+}
+
+void RenderDeviceGL_MaterialSetSamplers(renderMaterial_t* material, u32 slot,
+        renderTextureSampler_t* samplers, u32 count)
+{
+    ASSERT_MESSAGE(material != NULL, "Material is null");
+    ASSERT_MESSAGE(slot < RENDER_MAX_TEXTURES, "Invalid texture slot");
+    ASSERT_MESSAGE(samplers != NULL, "Samplers is null");
+    ASSERT_MESSAGE(count <= RENDER_MAX_TEXTURES - slot, "Too many samplers to set");
+    renderMaterialGL_t* it = (renderMaterialGL_t*)material;
+
+    for (u32 i = 0; i < count; ++i)
+    {
+        ASSERT_MESSAGE(samplers[i].filter < RENDER_TEXTURE_FILTER_MAX, "Invalid texture filter");
+        ASSERT_MESSAGE(samplers[i].horizontalWrap < RENDER_TEXTURE_WRAP_MAX, "Invalid horizontal texture wrap");
+        ASSERT_MESSAGE(samplers[i].verticalWrap < RENDER_TEXTURE_WRAP_MAX, "Invalid vertical texture wrap");
+
+        it->samplers[slot + i] = samplers[i];
+    }
+}
+
+void RenderDeviceGL_MaterialRelease(renderMaterial_t* material)
+{
+    ASSERT_MESSAGE(material != NULL, "Material is null");
+    renderMaterialGL_t* it = (renderMaterialGL_t*)material;
+
+    glDeleteProgram(it->id);
+    Memory_BumpFree(it);
+}
+
 void RenderDeviceGL_Clear(renderClearDescriptor_t desc)
 {
     if (desc.tests & RENDER_TEST_SCISSOR)
@@ -502,12 +654,37 @@ void RenderDeviceGL_Swap(void)
     Sys_SwapGL();
 }
 
-void RenderDeviceGL_TextureBind(GLuint id)
+void RenderDeviceGL_TextureBind(u8 slot, GLuint id)
 {
-    if (s_renderStateGL.texture != id)
+    if (s_renderStateGL.textures[slot] != id)
     {
+        glActiveTexture(GL_TEXTURE0 + id);
         glBindTexture(GL_TEXTURE_2D, id);
-        s_renderStateGL.texture = id;
+        s_renderStateGL.textures[slot] = id;
+    }
+}
+
+void RenderDeviceGL_SamplerBind(u8 slot, renderTextureSampler_t sampler)
+{
+    static const GLint filterTable[] = { GL_NEAREST, GL_LINEAR, };
+    static const GLint wrapTable[] = { GL_CLAMP_TO_EDGE, GL_REPEAT, GL_MIRRORED_REPEAT, };
+
+    glActiveTexture(GL_TEXTURE0 + slot);
+    if (s_renderStateGL.samplers[slot].filter != sampler.filter)
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterTable[sampler.filter]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterTable[sampler.filter]);
+        s_renderStateGL.samplers[slot].filter = sampler.filter;
+    }
+    if (s_renderStateGL.samplers[slot].horizontalWrap != sampler.horizontalWrap)
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapTable[sampler.horizontalWrap]);
+        s_renderStateGL.samplers[slot].horizontalWrap = sampler.horizontalWrap;
+    }
+    if (s_renderStateGL.samplers[slot].verticalWrap != sampler.verticalWrap)
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapTable[sampler.verticalWrap]);
+        s_renderStateGL.samplers[slot].verticalWrap = sampler.verticalWrap;
     }
 }
 
@@ -535,5 +712,14 @@ void RenderDeviceGL_EboBind(GLuint id)
     {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
         s_renderStateGL.ebo = id;
+    }
+}
+
+void RenderDeviceGL_ProgramBind(GLuint id)
+{
+    if (s_renderStateGL.program != id)
+    {
+        glUseProgram(id);
+        s_renderStateGL.program = id;
     }
 }

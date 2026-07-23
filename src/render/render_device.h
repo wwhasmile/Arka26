@@ -19,6 +19,10 @@ typedef struct
     void (*meshRelease)(renderMesh_t*);
 
     renderMaterial_t* (*materialCreate)(const char*, const char*);
+    void (*materialSetUniform)(renderMaterial_t*, u32, void*, u32);
+    void (*materialSetTextures)(renderMaterial_t*, u32, renderTexture_t**, u32);
+    void (*materialSetSamplers)(renderMaterial_t*, u32, renderTextureSampler_t*, u32);
+    void (*materialRelease)(renderMaterial_t*);
 
     void (*clear)(renderClearDescriptor_t);
 
